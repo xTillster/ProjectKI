@@ -1,4 +1,10 @@
 public class Board {
-    static Figures[][] board = new Figures[8][8];
+    Figures[][] board;
+    public Board() {
+        this.board = new Figures[8][8];
+    }
 
+    public void fenToBoard(String FEN){
+        //TODO: Implement Method
+    }
 }
