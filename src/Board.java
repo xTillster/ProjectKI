@@ -502,22 +502,25 @@ public class Board {
             switch (target){
                 case SINGLE_RED -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
                     figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
                 }
                 case SINGLE_BLUE -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
                     figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
 
-                    figureMap[1].put(new Field(move.end_row, move.end_col), null);
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
                 case DOUBLE_RED, MIXED_RED -> { }
                 case DOUBLE_BLUE -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.MIXED_RED;
                     figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_RED);
 
@@ -525,15 +528,17 @@ public class Board {
                 }
                 case MIXED_BLUE -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
                     figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
 
-                    figureMap[1].put(new Field(move.end_row, move.end_col), null);
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
                     figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
                 }
@@ -542,17 +547,19 @@ public class Board {
             switch (target){
                 case SINGLE_RED -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+
                     board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
-                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case SINGLE_BLUE -> {
                     board[move.start_row][move.start_col - 'a'] = null;
-                    figureMap[0].put(new Field(move.start_row, move.start_col), null);
-                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
-                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
 
-                    figureMap[1].put(new Field(move.end_row, move.end_col), null);
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
                 }
                 case DOUBLE_RED, MIXED_RED -> { }
                 case DOUBLE_BLUE -> {
@@ -634,5 +641,4 @@ public class Board {
 
 
     }
-
 }
