@@ -11,7 +11,7 @@ public class Field {
 
     @Override
     public String toString() {
-        return col + "" + row;
+        return col + "" + (row + 1);
     }
 
     @Override

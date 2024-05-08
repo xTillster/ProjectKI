@@ -1,7 +1,4 @@
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Board {
     //board = new Figures[row][column]
@@ -16,21 +13,41 @@ public class Board {
     public static void main(String[] args) {
 
         //assumes given fen is correct
-        String init = "b0b04/b02bb2b01/2b05/4rb3/6b01/2r04r0/1r01r0r01r01/r0r04 r";
+        String init = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 b";
         String fen = init.substring(0, init.length() - 2);
         blueToMove = (init.charAt(init.length()-1) == 'b' ? 1 : 0);
 
         fenToBoard(fen);
         boardToString();
 
-        Set<Move> moves = getPossibleMoves();
-        moves = getLegalMoves(moves);
+        //Random rand = new Random();
 
-        for (Move move : moves) {
-            System.out.println(move);
+        while(!isGameFinished(blueToMove)){
+            Set<Move> moves = getPossibleMoves(blueToMove);
+            moves = getLegalMoves(moves);
+            Move move = moves.iterator().next();
+
+            /*Move move;
+            int i = rand.nextInt(moves.size());
+            do {
+                move = moves.iterator().next();
+                --i;
+            } while (i != 0);*/
+
+            makeMove(move);
+            String color = "";
+            if(blueToMove == 1) {color = "Blue";} else {color = "Red";}
+
+            System.out.println(color + " makes move: " + move);
+            boardToString();
+
+            if (blueToMove == 1) {
+                blueToMove = 0;
+            } else {
+                blueToMove = 1;
+            }
+
         }
-
-        System.out.println(figureMap[1].get(new Field(1, 'a')));
 
     }
 
@@ -207,7 +224,7 @@ public class Board {
 
     static void boardToString(){
         for(int i=7; i>-1; i--){
-            System.out.print("|");
+            System.out.print((i+1) + "|");
             for(int j=0; j<8; j++){
                 Figures tmp = board[i][j];
 
@@ -236,12 +253,19 @@ public class Board {
                 }
             }
             System.out.println();
+            if(i == 0){
+                System.out.println("    a    b    c    d    e    f    g    h");
+            }
         }
     }
 
-    static boolean isGameFinished(){
+    static boolean isGameFinished(int blueToMove){
         //index 0 are red figures, index 1 are blue figures
         if(figureMap[0].isEmpty() || figureMap[1].isEmpty()) return true;
+
+        //TODO clean this up
+        Set<Move> moves = getPossibleMoves(blueToMove);
+        if (getLegalMoves(moves).isEmpty()) return true;
 
         for(int i = 1; i<7; i++){
 
@@ -268,7 +292,7 @@ public class Board {
         return false;
     }
 
-    static Set<Move> getPossibleMoves(){
+    static Set<Move> getPossibleMoves(int blueToMove){
         HashSet<Move> moves = new HashSet<>();
 
         for(Map.Entry<Field, Figures> entry: figureMap[blueToMove].entrySet()){
@@ -394,7 +418,7 @@ public class Board {
                         }
                         continue;
                     }
-                    case DOUBLE_RED, MIXED_RED -> { }
+                    case DOUBLE_RED, MIXED_RED -> { continue; }
                     case null -> {
                         //add all moves to empty field
                         if(isNormalMove(move)){
@@ -422,7 +446,7 @@ public class Board {
                         }
                         continue;
                     }
-                    case DOUBLE_BLUE, MIXED_BLUE -> { }
+                    case DOUBLE_BLUE, MIXED_BLUE -> { continue;  }
                     case null -> {
                         //add all moves to empty field
                         if(isNormalMove(move)){
@@ -440,7 +464,7 @@ public class Board {
                         legalMoves.add(move);
                         continue;
                     }
-                    case DOUBLE_RED, MIXED_RED -> { }
+                    case DOUBLE_RED, MIXED_RED -> { continue; }
                     case null -> {
                         //add all moves to empty field
                         legalMoves.add(move);
@@ -457,7 +481,7 @@ public class Board {
                         legalMoves.add(move);
                         continue;
                     }
-                    case DOUBLE_BLUE, MIXED_BLUE -> { }
+                    case DOUBLE_BLUE, MIXED_BLUE -> { continue; }
                     case null -> {
                         //add all moves to empty field
                         legalMoves.add(move);
@@ -466,9 +490,8 @@ public class Board {
                 }
             }
 
-
             System.out.println("Shouldn't be here: " + move);
-            boardToString();
+            //boardToString();
         }
 
         return legalMoves;
@@ -561,80 +584,221 @@ public class Board {
                     board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
                     figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
                 }
-                case DOUBLE_RED, MIXED_RED -> { }
-                case DOUBLE_BLUE -> {
+                case DOUBLE_BLUE, MIXED_BLUE -> { }
+                case DOUBLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = null;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.MIXED_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
+
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
                 }
-                case MIXED_BLUE -> {
+                case MIXED_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = null;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
+                    board[move.start_row][move.start_col - 'a'] = null;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
                 }
             }
         } else if (start == Figures.DOUBLE_RED){
             switch (target){
                 case SINGLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
                 }
                 case SINGLE_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
+
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
-                case DOUBLE_RED -> {
-                }
+                case DOUBLE_RED, MIXED_RED -> { }
                 case DOUBLE_BLUE -> {
-                }
-                case MIXED_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.MIXED_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_RED);
+
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.MIXED_RED);
                 }
                 case MIXED_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
+
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
                 }
             }
         } else if (start == Figures.DOUBLE_BLUE){
             switch (target){
                 case SINGLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case SINGLE_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
                 }
                 case DOUBLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.MIXED_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
+
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
                 }
-                case DOUBLE_BLUE -> {
-                }
+                case DOUBLE_BLUE, MIXED_BLUE -> { }
                 case MIXED_RED -> {
-                }
-                case MIXED_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
                 }
             }
         } else if (start == Figures.MIXED_RED){
             switch (target){
                 case SINGLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
                 }
                 case SINGLE_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
+
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
-                case DOUBLE_RED -> {
-                }
+                case DOUBLE_RED, MIXED_RED -> { }
                 case DOUBLE_BLUE -> {
-                }
-                case MIXED_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.MIXED_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_RED);
+
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.MIXED_RED);
                 }
                 case MIXED_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_RED);
+
+                    figureMap[1].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[0].remove(new Field(move.start_row, move.start_col));
+                    figureMap[1].put(new Field(move.start_row, move.start_col), Figures.SINGLE_BLUE);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.SINGLE_RED);
                 }
             }
         } else if (start == Figures.MIXED_BLUE){
             switch (target){
                 case SINGLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case SINGLE_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
                 }
                 case DOUBLE_RED -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.MIXED_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
+
+                    figureMap[0].put(new Field(move.end_row, move.end_col), Figures.MIXED_BLUE);
                 }
-                case DOUBLE_BLUE -> {
-                }
+                case DOUBLE_BLUE, MIXED_BLUE -> { }
                 case MIXED_RED -> {
-                }
-                case MIXED_BLUE -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.DOUBLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.DOUBLE_BLUE);
+
+                    figureMap[0].remove(new Field(move.end_row, move.end_col));
                 }
                 case null -> {
+                    board[move.start_row][move.start_col - 'a'] = Figures.SINGLE_RED;
+                    figureMap[1].remove(new Field(move.start_row, move.start_col));
+                    figureMap[0].put(new Field(move.start_row, move.start_col), Figures.SINGLE_RED);
+
+                    board[move.end_row][move.end_col - 'a'] = Figures.SINGLE_BLUE;
+                    figureMap[1].put(new Field(move.end_row, move.end_col), Figures.SINGLE_BLUE);
                 }
             }
         }
