@@ -1,3 +1,7 @@
+import java.util.Objects;
+
+
+
 public class Move {
     public int start_row;
     public char start_col;
@@ -9,6 +13,26 @@ public class Move {
         this.start_col = start_col;
         this.end_row = end_row;
         this.end_col = end_col;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Move move = (Move) o;
+        return start_row == move.start_row &&
+                start_col == move.start_col &&
+                end_row == move.end_row &&
+                end_col == move.end_col;
+    }
+
+
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(start_row, start_col, end_row, end_col);
     }
 
     @Override
