@@ -53,6 +53,7 @@ public class Board {
 
     //assumes the fen has correct syntax; old and slower
     static void fenToBoard(String fen){
+        board = new Figures[8][8];
         String tmpFEN = fen;
         char value;
 
