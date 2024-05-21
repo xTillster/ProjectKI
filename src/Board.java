@@ -1,4 +1,8 @@
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static java.lang.Character.isDigit;
 
 public class Board {
     //board = new Figures[row][column]
@@ -51,8 +55,103 @@ public class Board {
 
     }
 
-    //assumes the fen has correct syntax; old and slower
+    /*
+    //überprüft, ob die korrekten Zeichenkombinationen verwendet worden sind
+    static boolean correctFen(String fen){
+        String regex = "^(?=(?:b0|bb|rb|br|rr|r0|[1-8]|\\/)+\\s+[br]+$)";
+        Matcher matcher = Pattern.compile(regex).matcher(fen);
+        boolean matchFound = matcher.find();
+        if(matchFound&&correctCharCount(fen)&&checkFenLogic(fen)) {
+            System.out.println("Match found");
+            return true;
+        } else {
+            System.out.println("Match not found");
+            return false;
+        }
+    }
+
+    //überprüft, ob die richtige Anzahl von r, b und / vorkommt
+    static boolean correctCharCount(String fen){
+        String regex= "^(?=(?:[^r]*r){0,13}[^r]*$)(?=(?:[^b]*b){0,13}[^b]*$)(?=(?:[^\\/]*\\/){7}[^\\/]*$).*$";
+        Matcher matcher = Pattern.compile(regex).matcher(fen);
+        boolean matchFound = matcher.find();
+        if(matchFound) {
+            return true;
+        } else {
+            System.out.println("Wrong count of / or r or b");
+            return false;
+        }
+    }
+
+    //überprüft die Länge der jeweiligen Zeilen
+    static boolean checkFenLogic(String fen){
+        String[] fen_split = fen.split("/");
+        for(int i = 0; i < fen_split.length; i++) {
+            int count_length = 0;
+            for (int j = 0; j < fen_split[i].length(); j++) {
+                if (isDigit(fen_split[i].charAt(j))) {
+                    count_length += Character.getNumericValue(fen_split[i].charAt(j));
+                }else if(fen_split[i].charAt(j)==' '){
+                    j+=1;
+                }else {
+                    count_length += 1;
+                    j +=1;
+                }
+            }
+            if((i==0 || i==7)){
+                if(count_length !=6){
+                    System.out.println("Wrong length " + i + ". current length" + count_length);
+                    return false;
+                }else if(!correct_lastLine(fen_split[i], i)){
+                    return false;
+                }
+            }else if(i < 7 && count_length != 8) {
+                System.out.println("Wrong length " + i + ". current length" + count_length);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //überprüft, ob in der ersten/letzten Zeile nur einmal r/b und kein rb/br vorkommt
+    static boolean correct_lastLine(String fen, int line) {
+        switch (line){
+            case 0 ->{
+                String regex= "^(?=[^r]*r?[^r]*$)(?!.*rb).*$";
+                Matcher matcher = Pattern.compile(regex).matcher(fen);
+                boolean matchFound = matcher.find();
+                if(matchFound) {
+                    return true;
+                } else {
+                    System.out.println("non reachable position (First Line)");
+                    return false;
+                }
+            }
+            case 7 ->{
+                String fenLastLine = fen.substring(0,fen.length()-2);
+                String regex= "^(?=[^b]*b?[^b]*$)(?!.*br).*$";
+                Matcher matcher = Pattern.compile(regex).matcher(fenLastLine);
+                boolean matchFound = matcher.find();
+                if(matchFound) {
+                    return true;
+                } else {
+                    System.out.println("non reachable position (Last Line)");
+                    return false;
+                }
+            }
+            default -> {
+                System.out.println("Wrong");
+                return false;
+            }
+        }
+    }
+
+     */
+
+
+//assumes the fen has correct syntax; old and slower
     static void fenToBoard(String fen){
+        board = new Figures[8][8];
         String tmpFEN = fen;
         char value;
 
