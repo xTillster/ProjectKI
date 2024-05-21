@@ -10,14 +10,12 @@ public class Board {
     public HashMap<Field, Figures>[] figureMap = new HashMap[2];
     public int blueToMove;
 
-    static public HashMap<Float, Set<Move>>[] minimaxMoves = new HashMap[10];
-
     public static void main(String[] args) {
 
         Board board = new Board();
 
         //assumes given fen is correct
-        String init = "6/8/5b0b01/8/8/5r0r01/8/6 b";
+        String init = "6/3b0b03/3r02bb1/b0b03bb2/rrrr1bb2rr1/2b01b01r01/2r01r02r0/4r01 b";
         String fen = init.substring(0, init.length() - 2);
 
         board.fenToBoard(fen);
@@ -26,7 +24,7 @@ public class Board {
         board.boardToString();
 
         boolean isMax = true;
-        for (int i = 0; i < 25; i++) {
+        while (!board.isGameFinished(board.blueToMove)) {
 
             if (board.blueToMove == 1){
                 isMax = true;
@@ -34,53 +32,16 @@ public class Board {
                 isMax = false;
             }
 
-            float v = alphaBeta(board, isMax);
-
-            Move move = getMove(v);
-            board.makeMove(move);
-            System.out.println("Current eval: " + board.evaluatePosition());
-            //System.out.println(board.minimaxMoves.get(v));
-            System.out.println("alpha beta eval: " + v);
-            System.out.println(Arrays.toString(minimaxMoves));
-            board.boardToString();
+            long start = System.currentTimeMillis();
+            ValueMove vm = alphaBeta(board, isMax);
+            long end = System.currentTimeMillis();
+            Move move = vm.move;
             System.out.println();
-
-                /*if (newBoard.blueToMove == 1) {
-                    newBoard.blueToMove = 0;
-                } else {
-                    newBoard.blueToMove = 1;
-                }*/
-
-        }
-
-
-        /*while(!board.isGameFinished(board.blueToMove)){
-            Set<Move> moves = board.getPossibleMoves(board.blueToMove);
-            moves = board.getLegalMoves(moves);
-            Move move = moves.iterator().next();
-
-            Random rand = new Random();
-            //Move move;
-            int i = rand.nextInt(moves.size());
-            do {
-                move = moves.iterator().next();
-                --i;
-            } while (i != 0);
-
+            System.out.println("took: " + (end - start) + " ms");
+            System.out.println("Move made: " + move + " on expected eval " + vm.v);
             board.makeMove(move);
-            String color = "";
-            if(board.blueToMove == 1) {color = "Blue";} else {color = "Red";}
-
-            System.out.println(color + " makes move: " + move);
             board.boardToString();
-
-            if (board.blueToMove == 1) {
-                board.blueToMove = 0;
-            } else {
-                board.blueToMove = 1;
-            }
-
-        }*/
+        }
 
     }
 
@@ -90,178 +51,215 @@ public class Board {
         this.blueToMove = blueToMove;
     }
 
-    static public float alphaBeta(Board board, boolean isMax){
-        board.minimaxMoves = new HashMap[10];
-        return alphaBetaRecursion(board, 5, -10000.0f, +10000.0f, isMax, null);
+    static public ValueMove alphaBeta(Board board, boolean isMax){
+        return alphaBetaRecursion(board, 3, -100000.0f, +100000.0f, isMax);
     }
 
-    static private float alphaBetaRecursion(Board board, int depth, float alpha, float beta, boolean isMax, Move firstMove) {
-        if(depth == 0 || board.isGameFinished(board.blueToMove)) {
-            float eval =  board.evaluatePosition();
-            addMove(eval, firstMove, depth);
-            return eval;
+    static public ValueMove alphaBetaRecursion(Board board, int depth, float alpha, float beta, boolean isMax){
+        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+            return new ValueMove(board.evaluatePosition(), null, depth);
         }
 
         if (isMax){
-            //float v = alpha;
-            float v = -10000.0f;
+            //float value = alpha;
+            float value = -100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
 
-
-            Set<Move> moves = board.getLegalMoves(board.getPossibleMoves(board.blueToMove));
-            for (Move move : moves) {
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
 
-                /*if (newBoard.blueToMove == 1) {
-                    newBoard.blueToMove = 0;
-                } else {
-                    newBoard.blueToMove = 1;
-                }*/
+                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, false);
 
-                if (firstMove == null){
-                    v = Math.max(v, alphaBetaRecursion(newBoard, depth - 1, v, beta, false, new Move(move.start_row, move.start_col, move.end_row, move.end_col)));
-                } else {
-                    v = Math.max(v, alphaBetaRecursion(newBoard, depth - 1, v, beta, false, firstMove));
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v > value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
                 }
 
-                alpha = Math.max(alpha, v);
+                alpha = Math.max(alpha, value);
 
-                if(v >= beta) break;
+                /*if (value >= beta) {
+                    System.out.println("break");
+                    break;
+                }*/
 
-                //board.minimaxMoves.put(v, move);
-
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
             }
-            return v;
+            return new ValueMove(value, bestMove, bestDepth);
         } else {
-            //float v = beta;
-            float v = 10000.0f;
+            //float value = beta;
+            float value = 100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
 
-            Set<Move> moves = board.getLegalMoves(board.getPossibleMoves(board.blueToMove));
-            for (Move move : moves) {
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
 
-                /*if (newBoard.blueToMove == 1) {
-                    newBoard.blueToMove = 0;
-                } else {
-                    newBoard.blueToMove = 1;
-                }*/
+                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, true);
 
-                if (firstMove == null){
-                    v = Math.min(v, alphaBetaRecursion(newBoard, depth - 1, alpha, v, true, new Move(move.start_row, move.start_col, move.end_row, move.end_col)));
-                } else {
-                    v = Math.min(v, alphaBetaRecursion(newBoard, depth - 1, alpha, v, true, firstMove));
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v < value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
                 }
 
-                beta = Math.min(beta, v);
+                beta = Math.min(beta, value);
 
-                if(v <= alpha) break;
+                /*if (value <= alpha) {
+                    System.out.println("break");
+                    break;
+                }*/
 
-                //board.minimaxMoves.put(v, move);
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
+
             }
-            return v;
+            return new ValueMove(value, bestMove, bestDepth);
         }
     }
 
-    static public Move getMove(float v) {
-        //TODO modify: if chosen move (at the end) is present somewhere with a lower depth and the eval is better or worse it has to be dropped and a new move has to be selected
-
-        for (int i = minimaxMoves.length - 1; -1 < i; i--) {
-            HashMap<Float, Set<Move>> map = minimaxMoves[i];
-            if (map == null) continue;
-            if(!map.containsKey(v)) continue;
-            return map.get(v).iterator().next();
-        }
-        return null;
-    }
-
-    static public void addMove(float v, Move move, int depth) {
-        if (minimaxMoves[depth] == null) minimaxMoves[depth] = new HashMap();
-        if (!minimaxMoves[depth].containsKey(v)) {
-            minimaxMoves[depth].put(v, new HashSet<>());
-        }
-
-        minimaxMoves[depth].get(v).add(move);
-    }
-
-    static public float miniMax(Board board, boolean isMax) {
-        minimaxMoves = new HashMap[10];
-        return miniMaxRecursion(board, 5, isMax, null);
-    }
-
-    static private float miniMaxRecursion(Board board, int depth, boolean isMax, Move firstMove) {
-        if(depth == 0 || board.isGameFinished(board.blueToMove)) {
-            float eval =  board.evaluatePosition();
-            //System.out.println();
-            //System.out.println("end pos eval: " + eval);
-            //board.boardToString();
-            //System.out.println();
-            //minimaxMoves.put(eval, firstMove);
-            //if(eval == 5.0f)System.out.println(depth + " " + firstMove);
-            addMove(eval, firstMove, depth);
-            return eval;
+    static public ValueMove alphaBetaRecursionNew(Board board, int depth, float alpha, float beta, boolean isMax){
+        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+            return new ValueMove(board.evaluatePosition(), null, depth);
         }
 
         if (isMax){
-            float v = -10000.0f;
+            //float value = alpha;
+            float value = -100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
 
-            Set<Move> moves = board.getLegalMoves(board.getPossibleMoves(board.blueToMove));
-            for (Move move : moves) {
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
 
-                /*if (newBoard.blueToMove == 1) {
-                    newBoard.blueToMove = 0;
-                } else {
-                    newBoard.blueToMove = 1;
-                }*/
+                ValueMove evaluation = alphaBetaRecursionNew(newBoard, depth - 1, alpha, beta, false);
 
-                //System.out.println();
-                //System.out.println("make move: " + move + ", evals to: " + newBoard.evaluatePosition());
-                //newBoard.boardToString();
-                //System.out.println();
-
-                if (firstMove == null){
-                    v = Math.max(v, miniMaxRecursion(newBoard, depth - 1, false, new Move(move.start_row, move.start_col, move.end_row, move.end_col)));
-                } else {
-                    v = Math.max(v, miniMaxRecursion(newBoard, depth - 1, false, firstMove));
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v > value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
                 }
 
-                //board.minimaxMoves.put(v, move);
+                alpha = Math.max(alpha, value);
+
+                /*if (value > beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
+
+                /*if (beta <= alpha) {
+                    //System.out.println("break");
+                    break;
+                }*/
             }
-            return v;
+            return new ValueMove(value, bestMove, bestDepth);
         } else {
-            float v = +10000.0f;
+            //float value = beta;
+            float value = 100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
 
-            Set<Move> moves = board.getLegalMoves(board.getPossibleMoves(board.blueToMove));
-            for (Move move : moves) {
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
 
-                /*if (newBoard.blueToMove == 1) {
-                    newBoard.blueToMove = 0;
-                } else {
-                    newBoard.blueToMove = 1;
-                }*/
+                ValueMove evaluation = alphaBetaRecursionNew(newBoard, depth - 1, alpha, beta, true);
 
-                //System.out.println();
-                //System.out.println("make move: " + move + ", evals to: " + newBoard.evaluatePosition());
-                //newBoard.boardToString();
-                //System.out.println();
-
-                if (firstMove == null){
-                    v = Math.min(v, miniMaxRecursion(newBoard, depth - 1, true, new Move(move.start_row, move.start_col, move.end_row, move.end_col)));
-                } else {
-                    v = Math.min(v, miniMaxRecursion(newBoard, depth - 1, true, firstMove));
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v < value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
                 }
 
-                //board.minimaxMoves.put(v, move);
+                beta = Math.min(beta, value);
+
+                /*if (value < alpha) {
+                    //System.out.println("break");
+                    break;
+                }*/
+
+                /*if (beta <= alpha) {
+                    //System.out.println("break");
+                    break;
+                }*/
+
             }
-            return v;
+            return new ValueMove(value, bestMove, bestDepth);
+        }
+    }
+
+    static public ValueMove miniMax(Board board, boolean isMax) {
+        return miniMaxRecursion(board, 4, isMax);
+    }
+
+    static public ValueMove miniMaxRecursion(Board board, int depth, boolean isMax){
+        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+            return new ValueMove(board.evaluatePosition(), null, depth);
+        }
+
+        if (isMax){
+            float value = -100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
+
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+                Board newBoard = new Board();
+                newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
+                newBoard.makeMove(move);
+
+                ValueMove evaluation = miniMaxRecursion(newBoard, depth - 1, false);
+
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v > value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
+                }
+            }
+            return new ValueMove(value, bestMove, bestDepth);
+        } else {
+            float value = 100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
+
+            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+                Board newBoard = new Board();
+                newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
+                newBoard.makeMove(move);
+
+                ValueMove evaluation = miniMaxRecursion(newBoard, depth - 1, true);
+
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v < value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
+                }
+            }
+            return new ValueMove(value, bestMove, bestDepth);
         }
     }
 
@@ -288,15 +286,16 @@ public class Board {
         return newBoardMap;
     }
 
-    //TODO: implement evaluation function
+
+    //TODO: implement evaluation function, group T FEN 6/4bb3/8/8/4b0r0b01/8/8/6 b; Stellungsbeschreibung: Blau gewinnt in einem Zug durch Blocken not implemented
     public float evaluatePosition(){
-        if(figureMap[0].isEmpty()) return +10000.0f;
-        if(figureMap[1].isEmpty()) return -10000.0f;
+        if(figureMap[0].isEmpty()) return +1000.0f;
+        if(figureMap[1].isEmpty()) return -1000.0f;
 
         float value = 0;
 
         for (Map.Entry<Field, Figures> entry : figureMap[1].entrySet()) {
-            if (entry.getKey().row == 7) return +10000.0f;
+            if (entry.getKey().row == 7) return +1000.0f;
 
             if (entry.getValue() == Figures.DOUBLE_BLUE){
                 value += 20;
@@ -309,7 +308,7 @@ public class Board {
         }
 
         for (Map.Entry<Field, Figures> entry : figureMap[0].entrySet()) {
-            if (entry.getKey().row == 0) return -10000.0f;
+            if (entry.getKey().row == 0) return -1000.0f;
 
             if (entry.getValue() == Figures.DOUBLE_RED){
                 value -= 20;
