@@ -19,12 +19,12 @@ public class Board {
         Board board = new Board();
 
         //assumes given fen is correct
-        String init = "6/3b0b03/3r02bb1/b0b03bb2/rrrr1bb2rr1/2b01b01r01/2r01r02r0/4r01 b";
+        String init = "3bb2/b02b02b01/3b02bbb0/1b06/1r0r02r01r0/6r01/5r0r0r0/6 b";
         String fen = init.substring(0, init.length() - 2);
 
         board.fenToBoard(fen);
         board.blueToMove = (init.charAt(init.length()-1) == 'b' ? 1 : 0);
-        System.out.println("init eval: " + board.evaluatePosition());
+        System.out.println("init eval: " + board.evaluatePosition(0));
         board.boardToString();
 
         boolean isMax = true;
@@ -56,12 +56,12 @@ public class Board {
     }
 
     static public ValueMove alphaBeta(Board board, boolean isMax){
-        return alphaBetaRecursion(board, 3, -100000.0f, +100000.0f, isMax);
+        return alphaBetaRecursion(board, 7, -100000.0f, +100000.0f, isMax);
     }
 
     static public ValueMove alphaBetaRecursion(Board board, int depth, float alpha, float beta, boolean isMax){
         if(depth == 0 || board.isGameFinished(board.blueToMove)){
-            return new ValueMove(board.evaluatePosition(), null, depth);
+            return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
         if (isMax){
@@ -87,10 +87,10 @@ public class Board {
 
                 alpha = Math.max(alpha, value);
 
-                /*if (value >= beta) {
-                    System.out.println("break");
+                if (value >= beta) {
+                    //System.out.println("break");
                     break;
-                }*/
+                }
 
                 /*if (alpha >= beta) {
                     //System.out.println("break");
@@ -121,10 +121,10 @@ public class Board {
 
                 beta = Math.min(beta, value);
 
-                /*if (value <= alpha) {
-                    System.out.println("break");
+                if (value <= alpha) {
+                    //System.out.println("break");
                     break;
-                }*/
+                }
 
                 /*if (alpha >= beta) {
                     //System.out.println("break");
@@ -138,7 +138,7 @@ public class Board {
 
     static public ValueMove alphaBetaRecursionNew(Board board, int depth, float alpha, float beta, boolean isMax){
         if(depth == 0 || board.isGameFinished(board.blueToMove)){
-            return new ValueMove(board.evaluatePosition(), null, depth);
+            return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
         if (isMax){
@@ -219,7 +219,7 @@ public class Board {
 
     static public ValueMove miniMaxRecursion(Board board, int depth, boolean isMax){
         if(depth == 0 || board.isGameFinished(board.blueToMove)){
-            return new ValueMove(board.evaluatePosition(), null, depth);
+            return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
         if (isMax){
@@ -292,14 +292,14 @@ public class Board {
 
 
     //TODO: implement evaluation function, group T FEN 6/4bb3/8/8/4b0r0b01/8/8/6 b; Stellungsbeschreibung: Blau gewinnt in einem Zug durch Blocken not implemented
-    public float evaluatePosition(){
-        if(figureMap[0].isEmpty()) return +1000.0f;
-        if(figureMap[1].isEmpty()) return -1000.0f;
+    public float evaluatePosition(int depth){
+        if(figureMap[0].isEmpty()) return +1000.0f + depth;
+        if(figureMap[1].isEmpty()) return -1000.0f - depth;
 
         float value = 0;
 
         for (Map.Entry<Field, Figures> entry : figureMap[1].entrySet()) {
-            if (entry.getKey().row == 7) return +1000.0f;
+            if (entry.getKey().row == 7) return +1000.0f + depth;
 
             if (entry.getValue() == Figures.DOUBLE_BLUE){
                 value += 20;
@@ -312,7 +312,7 @@ public class Board {
         }
 
         for (Map.Entry<Field, Figures> entry : figureMap[0].entrySet()) {
-            if (entry.getKey().row == 0) return -1000.0f;
+            if (entry.getKey().row == 0) return -1000.0f - depth;
 
             if (entry.getValue() == Figures.DOUBLE_RED){
                 value -= 20;
