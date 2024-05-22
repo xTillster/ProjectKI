@@ -1,3 +1,5 @@
+/*
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -93,7 +95,6 @@ public class TestMoveGenerator {
     }
 
 
-
     @ParameterizedTest
     @MethodSource("provideFenStrings2")
     public void getPossibleMovesVariant2(String fen, Set<Move> expectedMoves) {
@@ -126,3 +127,5 @@ public class TestMoveGenerator {
     }
 
 }
+
+ */

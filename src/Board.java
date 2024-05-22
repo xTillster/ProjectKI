@@ -9,6 +9,7 @@ public class Board {
     //board = new Figures[2][a]
     //column uses ascii char values
     public Figures[][] board = new Figures[8][8];
+    public static int counter = 0;
 
     //index 0 are red figures, index 1 are blue figures
     public HashMap<Field, Figures>[] figureMap = new HashMap[2];
@@ -37,7 +38,7 @@ public class Board {
             }
 
             long start = System.currentTimeMillis();
-            ValueMove vm = alphaBeta(board, isMax);
+            ValueMove vm = alphaBeta(board, isMax, 4);
             long end = System.currentTimeMillis();
             Move move = vm.move;
             System.out.println();
@@ -55,8 +56,8 @@ public class Board {
         this.blueToMove = blueToMove;
     }
 
-    static public ValueMove alphaBeta(Board board, boolean isMax){
-        return alphaBetaRecursion(board, 7, -100000.0f, +100000.0f, isMax);
+    static public ValueMove alphaBeta(Board board, boolean isMax, int depth){
+        return alphaBetaRecursion(board, depth, -100000.0f, +100000.0f, isMax);
     }
 
     static public ValueMove alphaBetaRecursion(Board board, int depth, float alpha, float beta, boolean isMax){
@@ -213,8 +214,8 @@ public class Board {
         }
     }
 
-    static public ValueMove miniMax(Board board, boolean isMax) {
-        return miniMaxRecursion(board, 4, isMax);
+    static public ValueMove miniMax(Board board, boolean isMax, int depth) {
+        return miniMaxRecursion(board, depth, isMax);
     }
 
     static public ValueMove miniMaxRecursion(Board board, int depth, boolean isMax){
@@ -293,6 +294,7 @@ public class Board {
 
     //TODO: implement evaluation function, group T FEN 6/4bb3/8/8/4b0r0b01/8/8/6 b; Stellungsbeschreibung: Blau gewinnt in einem Zug durch Blocken not implemented
     public float evaluatePosition(int depth){
+        counter++;
         if(figureMap[0].isEmpty()) return +1000.0f + depth;
         if(figureMap[1].isEmpty()) return -1000.0f - depth;
 
