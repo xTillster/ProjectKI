@@ -5,7 +5,7 @@ import static java.lang.Character.isDigit;
 public class BitBoard {
 
     public static void main(String[] args) {
-        importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r");
+        importFEN("6/1b06/1r0b02bb2/2r02b02/8/5rr2/2r03r01/6 b");
     }
 
     public static void initiateBoard(){
@@ -62,12 +62,15 @@ public class BitBoard {
             jumpBoard[i/8][i%8]=" ";
         }
         for (int i=0;i<64;i++) {
-            if (((SingleRed>>i)&1)==1) {jumpBoard[i/8][i%8]="r0";}
-            if (((SingleBlue>>i)&1)==1) {jumpBoard[i/8][i%8]="b0";}
-            if (((DoubleRed>>i)&1)==1) {jumpBoard[i/8][i%8]="rr";}
-            if (((DoubleBlue>>i)&1)==1) {jumpBoard[i/8][i%8]="bb";}
-            if (((MixedRed>>i)&1)==1) {jumpBoard[i/8][i%8]="br";}
-            if (((MixedBlue>>i)&1)==1) {jumpBoard[i/8][i%8]="rb";}
+            int row = 7 - (i / 8); // Flip rows here
+            int col = i % 8;
+
+            if (((SingleRed>>i)&1)==1) {jumpBoard[row][col]="r0";}
+            if (((SingleBlue>>i)&1)==1) {jumpBoard[row][col]="b0";}
+            if (((DoubleRed>>i)&1)==1) {jumpBoard[row][col]="rr";}
+            if (((DoubleBlue>>i)&1)==1) {jumpBoard[row][col]="bb";}
+            if (((MixedRed>>i)&1)==1) {jumpBoard[row][col]="br";}
+            if (((MixedBlue>>i)&1)==1) {jumpBoard[row][col]="rb";}
         }
         for (int i=0;i<8;i++) {
             System.out.println(Arrays.toString(jumpBoard[i]));
@@ -77,13 +80,21 @@ public class BitBoard {
     public static void importFEN(String fenString) {
         //BitBoardFigures.SingleRed=0; BitBoardFigures.SingleBlue=0; BitBoardFigures.DoubleRed=0;
         //BitBoardFigures.DoubleBlue=0; BitBoardFigures.MixedRed=0; BitBoardFigures.MixedBlue=0;
+        BitBoardFigures.SingleRed = 0;
+        BitBoardFigures.SingleBlue = 0;
+        BitBoardFigures.DoubleRed = 0;
+        BitBoardFigures.DoubleBlue = 0;
+        BitBoardFigures.MixedRed = 0;
+        BitBoardFigures.MixedBlue = 0;
+
         int charIndex = 0;
-        int boardIndex = 56;
+        int boardIndex = 0;
         while (fenString.charAt(charIndex) != ' ')
         {
+
             //System.out.println("BoardIndex: " + boardIndex);
             //System.out.println("Char " +  fenString.charAt(charIndex));
-            if(boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
+            if(boardIndex == 0 || boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
                 System.out.println("BoardIndex if 0 or 7: " + boardIndex);
                 boardIndex++;
                 continue;
@@ -120,23 +131,21 @@ public class BitBoard {
                 }
             }
 
-
-            if(boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
-                System.out.println("BoardIndex 2 if 0 or 7 or 56 or 63: " + boardIndex);
+            if(boardIndex == 0 || boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
+                System.out.println("BoardIndex if 0 or 7: " + boardIndex);
                 boardIndex++;
                 continue;
             }
 
-            if(isDigit(fenString.charAt(charIndex))) {
+            if(Character.isDigit(fenString.charAt(charIndex))) {
                 int skip = Character.getNumericValue(fenString.charAt(charIndex));
-                    boardIndex += skip;
-                    charIndex++;
-            }
-            if (fenString.charAt(charIndex) == '/'){
-                boardIndex -= 16;
+                boardIndex += skip;
                 charIndex++;
             }
 
+            if (fenString.charAt(charIndex) == '/'){
+                charIndex++;
+            }
 
         }
         BitBoardFigures.blueToMove = (fenString.charAt(++charIndex) == 'b');
