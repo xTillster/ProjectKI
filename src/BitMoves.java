@@ -1,4 +1,3 @@
-import java.util.List;
 import java.util.Objects;
 
 public class BitMoves {
@@ -32,8 +31,7 @@ public class BitMoves {
         BLUE_ROOK = ~(SingleBlue);
         EMPTY = ~(SingleRed | DoubleRed | MixedRed | DoubleBlue | MixedBlue);
         EMPTY_KNIGHT = ~(DoubleBlue | MixedBlue);
-        String blueMoves = possibleMovesSB(SingleBlue)+possibleMovesNB(MixedBlue)+possibleMovesNB(DoubleBlue);
-        return blueMoves;
+        return possibleMovesSB(SingleBlue)+possibleMovesNB(MixedBlue)+possibleMovesNB(DoubleBlue);
     }
 
     public static String possibleMovesRed(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
@@ -42,8 +40,7 @@ public class BitMoves {
         RED_ROOK = ~(SingleRed);
         EMPTY = ~(SingleBlue | DoubleRed | MixedRed | DoubleBlue | MixedBlue);
         EMPTY_KNIGHT = ~(DoubleRed | MixedRed);
-        String redMoves = possibleMovesSR(SingleRed)+possibleMovesNR(MixedRed)+possibleMovesNR(DoubleRed);
-        return redMoves;
+        return possibleMovesSR(SingleRed)+possibleMovesNR(MixedRed)+possibleMovesNR(DoubleRed);
     }
 
     // Erklärung: i ist die Position, auf die die Figur kann z.B. 51, dann kann die Figur auf das Feld 51
@@ -249,12 +246,12 @@ public class BitMoves {
         long MixedRedt = 0;
         long MixedBluet = 0;
         for (int i = 0; i <= (moves.length() - 4); i++) {
-            SingleRedt = BitMoves.makeMove(BitBoardFigures.SingleRed, moves.substring(i, i + 4), "R");
-            SingleBluet = BitMoves.makeMove(BitBoardFigures.SingleBlue, moves.substring(i, i + 4), "B");
-            DoubleRedt = BitMoves.makeMove(BitBoardFigures.DoubleRed, moves.substring(i, i + 4), "DR");
-            DoubleBluet = BitMoves.makeMove(BitBoardFigures.DoubleBlue, moves.substring(i, i + 4), "DB");
-            MixedRedt = BitMoves.makeMove(BitBoardFigures.MixedRed, moves.substring(i, i + 4), "MR");
-            MixedBluet = BitMoves.makeMove(BitBoardFigures.MixedBlue, moves.substring(i, i + 4), "MR");
+            SingleRedt = BitMoves.makeMove(BitBoardFigures.SingleRed, moves.substring(i, i + 4), type);
+            SingleBluet = BitMoves.makeMove(BitBoardFigures.SingleBlue, moves.substring(i, i + 4), type);
+            DoubleRedt = BitMoves.makeMove(BitBoardFigures.DoubleRed, moves.substring(i, i + 4), type);
+            DoubleBluet = BitMoves.makeMove(BitBoardFigures.DoubleBlue, moves.substring(i, i + 4), type);
+            MixedRedt = BitMoves.makeMove(BitBoardFigures.MixedRed, moves.substring(i, i + 4), type);
+            MixedBluet = BitMoves.makeMove(BitBoardFigures.MixedBlue, moves.substring(i, i + 4), type);
         }
         BitBoard.drawArray(SingleRedt, SingleBluet, DoubleRedt, DoubleBluet, MixedRedt, MixedBluet);
     }
