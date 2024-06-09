@@ -8,20 +8,43 @@ public class BitBoard {
         importFEN("6/1b06/1r0b02bb2/2r02b02/8/5rr2/2r03r01/6 b");
     }
 
-    public static void initiateBoard(){
+    /*public static void initiateBoard(){
         long SingleRed = 0L, SingleBlue = 0L, DoubleRed = 0L, DoubleBlue = 0L, MixedRed = 0L, MixedBlue = 0L;
 
         String[][] jumpBoard ={
-                {"","r0","r0","r0","r0","r0","r0",""},
-                {"","r0","r0","r0","r0","r0","r0",""},
-                {" "," "," "," "," "," "," "," "},
-                {" "," "," "," "," "," "," "," "},
-                {" "," "," "," "," "," "," "," "},
-                {" "," "," "," "," "," "," "," "},
-                {"","b0","b0","b0","b0","b0","b0",""},
-                {"","b0","b0","b0","b0","b0","b0",""}};
+
+                {"00","01","02","03","04","05","06","07"},
+                {"08","09","10","11","12","13","14","15"},
+                {"16","17","18","19","20","21","22","23"},
+                {"24","25","26","27","28","29","30","31"},
+                {"32","33","34","35","36","37","38","39"},
+                {"40","41","42","43","44","45","46","47"},
+                {"48","49","50","51","52","53","54","55"},
+                {"56","57","58","59","60","61","62","63"}};
+
+
+
+                {"0L","1L","2L","03","04","05","06","07"},
+                {"08","09","10","11","12","13","14","15"},
+                {"16","17","18","19","20","21","22","23"},
+                {"24","25","26","27","28","29","30","31"},
+                {"32","33","34","35","36","37","38","39"},
+                {"40","41","42","43","44","45","46","47"},
+                {"48","49","50","51","52","53","54","55"},
+                {"56","57","58","59","60","61","62","63"}};
+
+
+                {"","","","","","","",""},
+                {"","","","","","","",""},
+                {"","","","","","","",""},
+                {"","","",""," "," ",""," "},
+                {"","",""," ","","","",""},
+                {"rr","rr","rr","rr","rr","rr","rr","rr"},
+                {"rr","rr","rr","rr","rr","rr","rr","rr"},
+                {"","","","","","","",""}};
         arrayToBitboards(jumpBoard,SingleRed,SingleBlue,DoubleRed,DoubleBlue,MixedRed,MixedBlue);
     }
+    */
 
     public static void arrayToBitboards(String [][] jumpBoard, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
         String Binary;
@@ -95,7 +118,7 @@ public class BitBoard {
             //System.out.println("BoardIndex: " + boardIndex);
             //System.out.println("Char " +  fenString.charAt(charIndex));
             if(boardIndex == 0 || boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
-                System.out.println("BoardIndex if 0 or 7: " + boardIndex);
+//                System.out.println("BoardIndex if 0 or 7: " + boardIndex);
                 boardIndex++;
                 continue;
             }
@@ -132,7 +155,7 @@ public class BitBoard {
             }
 
             if(boardIndex == 0 || boardIndex == 7 || boardIndex == 56 || boardIndex == 63){
-                System.out.println("BoardIndex if 0 or 7: " + boardIndex);
+//                System.out.println("BoardIndex if 0 or 7: " + boardIndex);
                 boardIndex++;
                 continue;
             }
