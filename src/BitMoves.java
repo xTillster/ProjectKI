@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Stack;
 
 import static java.lang.Long.bitCount;
 
@@ -24,6 +25,8 @@ public class BitMoves {
     static boolean colorRed = true;
     static boolean capture = false;
     static boolean blueWon;
+    //String format: 0-3 move, 4 source figure, 5 target figure
+    static Stack<String> unmakeStack = new Stack<>();
 
     public static void main(String[] args) {
         BitBoard.importFEN("6/1b06/1r0b02bb2/2r02b02/8/5rr2/2r03r01/6 r");

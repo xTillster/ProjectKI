@@ -27,7 +27,7 @@ public class BitBoard {
             BitValueMoves vm = alphaBeta(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue, isMax, 4);
 
             String move = vm.move;
-            System.out.println("Move made: " + vm.move + " on expected eval " + vm.v);
+            System.out.println("Move made: " + moveToString(vm.move) + " on expected eval " + vm.v);
             BitMoves.makeMove(move, true);
             deepCopyFigures(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy);
             BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
@@ -117,15 +117,15 @@ public class BitBoard {
 
                 alpha = Math.max(alpha, value);
 
-                if (value >= beta) {
-                    //System.out.println("break");
-                    break;
-                }
-
-                /*if (alpha >= beta) {
+                /*if (value >= beta) {
                     //System.out.println("break");
                     break;
                 }*/
+
+                if (beta <= alpha) {
+                    //System.out.println("break");
+                    break;
+                }
             }
             return new BitValueMoves(value, bestMove, bestDepth);
         } else {
@@ -157,15 +157,15 @@ public class BitBoard {
 
                 beta = Math.min(beta, value);
 
-                if (value <= alpha) {
-                    //System.out.println("break");
-                    break;
-                }
-
-                /* if (alpha >= beta) {
+                /*if (value <= alpha) {
                     //System.out.println("break");
                     break;
                 }*/
+
+                if (beta <= beta) {
+                    //System.out.println("break");
+                    break;
+                }
 
             }
             return new BitValueMoves(value, bestMove, bestDepth);
