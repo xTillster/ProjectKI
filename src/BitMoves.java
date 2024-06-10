@@ -303,116 +303,122 @@ public class BitMoves {
         return knightBlueMoves;
     }
 
-    public static void makeMove(String moves, boolean start){
+    public static void makeMove(String moves, boolean start, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
         //startfeld
         if (start) {
-            BitMoves.makeStartMove(BitBoardFigures.SingleRed, moves.substring(i, i + 4), 'S');
-            BitMoves.makeStartMove(BitBoardFigures.SingleBlue, moves.substring(i, i + 4), 's');
-            BitMoves.makeStartMove(BitBoardFigures.DoubleRed, moves.substring(i, i + 4), 'D');
-            BitMoves.makeStartMove(BitBoardFigures.DoubleBlue, moves.substring(i, i + 4), 'd');
-            BitMoves.makeStartMove(BitBoardFigures.MixedRed, moves.substring(i, i + 4), 'M');
-            BitMoves.makeStartMove(BitBoardFigures.MixedBlue, moves.substring(i, i + 4), 'm');
+            BitMoves.makeStartMove(SingleRed, moves.substring(i, i + 4), 'S', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeStartMove(SingleBlue, moves.substring(i, i + 4), 's', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeStartMove(DoubleRed, moves.substring(i, i + 4), 'D', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeStartMove(DoubleBlue, moves.substring(i, i + 4), 'd', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeStartMove(MixedRed, moves.substring(i, i + 4), 'M', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeStartMove(MixedBlue, moves.substring(i, i + 4), 'm', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
 
             //Zielfeld für capture Moves
         }else{
-            BitMoves.makeEndCaptureMove(BitBoardFigures.SingleRed, moves, 'S');
-            BitMoves.makeEndCaptureMove(BitBoardFigures.SingleBlue, moves, 's');
-            BitMoves.makeEndCaptureMove(BitBoardFigures.DoubleRed, moves, 'D');
-            BitMoves.makeEndCaptureMove(BitBoardFigures.DoubleBlue, moves, 'd');
-            BitMoves.makeEndCaptureMove(BitBoardFigures.MixedRed, moves, 'M');
-            BitMoves.makeEndCaptureMove(BitBoardFigures.MixedBlue, moves, 'm');
+            BitMoves.makeEndCaptureMove(SingleRed, moves, 'S', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeEndCaptureMove(SingleBlue, moves, 's', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeEndCaptureMove(DoubleRed, moves, 'D', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeEndCaptureMove(DoubleBlue, moves, 'd', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeEndCaptureMove(MixedRed, moves, 'M', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            BitMoves.makeEndCaptureMove(MixedBlue, moves, 'm', SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
         }
         //wenn auf dem Zielfeld kein capture stattgefunden hat
         if (!capture){
-            makeEndMove(moves);
+            makeEndMove(moves, SingleRed, SingleBlue);
         }
+
+        BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
     }
 
-    public static void makeStartMove(long board, String move, char type) {
+    public static void makeStartMove(long board, String move, char type, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
         int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
         //if statement is only true, when the current bitboard is occupied at the start position
         if (((board>>>start)&1)==1) {
             switch(type){
                 case 'S':
-                    BitBoardFigures.SingleRed&=~(1L<<start);
-                    makeMove(move, false);
+                    SingleRed&=~(1L<<start);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
                 case 'D':
-                    BitBoardFigures.DoubleRed&=~(1L<<start);
-                    BitBoardFigures.SingleRed|=(1L<<start);
-                    makeMove(move, false);
+                    DoubleRed&=~(1L<<start);
+                    SingleRed|=(1L<<start);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
-                case 'M': BitBoardFigures.MixedRed&=~(1L<<start);
-                    BitBoardFigures.SingleBlue|=(1L<<start);
-                    makeMove(move, false);
+                case 'M':
+                    MixedRed&=~(1L<<start);
+                    SingleBlue|=(1L<<start);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
-                case 's': BitBoardFigures.SingleBlue&=~(1L<<start);
+                case 's':
+                    SingleBlue&=~(1L<<start);
                     colorRed= false;
-                    makeMove(move, false);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
-                case 'd': BitBoardFigures.DoubleBlue&=~(1L<<start);
-                    BitBoardFigures.SingleBlue|=(1L<<start);
+                case 'd':
+                    DoubleBlue&=~(1L<<start);
+                    SingleBlue|=(1L<<start);
                     colorRed= false;
-                    makeMove(move, false);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
                 case 'm': BitBoardFigures.MixedBlue&=~(1L<<start);
-                    BitBoardFigures.SingleRed|=(1L<<start);
+                    SingleRed|=(1L<<start);
                     colorRed= false;
-                    makeMove(move, false);
+                    makeMove(move, false, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
                     break;
             }
         }
     }
 
-    public static void makeEndCaptureMove(long board, String move, char type) {
+    public static void makeEndCaptureMove(long board, String move, char type,  long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
         int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
         //if statement is only true, when the current bitboard is occupied at the end position
         if ((((board>>>end)&1)==1)&&colorRed) {
             switch(type){
-                case 'S': BitBoardFigures.SingleRed&=~(1L<<end);
-                    BitBoardFigures.DoubleRed|=(1L<<end);
+                case 'S': SingleRed&=~(1L<<end);
+                    DoubleRed|=(1L<<end);
                     capture = true;
                     break;
-                case 's': BitBoardFigures.SingleBlue&=~(1L<<end);
+                case 's': SingleBlue&=~(1L<<end);
                     capture = true;
                     break;
-                case 'd': BitBoardFigures.DoubleBlue&=~(1L<<end);
-                    BitBoardFigures.MixedRed|=(1L<<end);
+                case 'd': DoubleBlue&=~(1L<<end);
+                    MixedRed|=(1L<<end);
                     capture = true;
                     break;
-                case 'm': BitBoardFigures.MixedBlue&=~(1L<<end);
-                    BitBoardFigures.DoubleRed|=(1L<<end);
+                case 'm': MixedBlue&=~(1L<<end);
+                    DoubleRed|=(1L<<end);
                     capture = true;
                     break;
             }
         }else if((((board>>>end)&1)==1)&&!colorRed) {
             System.out.println("capture blue");
             switch(type){
-                case 'S': BitBoardFigures.SingleRed&=~(1L<<end);
+                case 'S': SingleRed&=~(1L<<end);
                     capture = true;
                     break;
-                case 'D': BitBoardFigures.DoubleRed&=~(1L<<end);
-                    BitBoardFigures.MixedBlue|=(1L<<end);
+                case 'D': DoubleRed&=~(1L<<end);
+                    MixedBlue|=(1L<<end);
                     capture = true;
                     break;
-                case 'M': BitBoardFigures.MixedRed&=~(1L<<end);
-                    BitBoardFigures.DoubleBlue|=(1L<<end);
+                case 'M': MixedRed&=~(1L<<end);
+                    DoubleBlue|=(1L<<end);
                     capture = true;
                     break;
-                case 's': BitBoardFigures.SingleBlue&=~(1L<<end);
-                    BitBoardFigures.DoubleBlue|=(1L<<end);
+                case 's': SingleBlue&=~(1L<<end);
+                    DoubleBlue|=(1L<<end);
                     capture = true;
                     break;
             }
         }
     }
 
-    public static void makeEndMove(String move) {
+    //If no other pieces/capture at end position
+    public static void makeEndMove(String move,  long SingleRed, long SingleBlue) {
         int end = (Character.getNumericValue(move.charAt(2)) * 8) + (Character.getNumericValue(move.charAt(3)));
         if (colorRed){
-            BitBoardFigures.SingleRed|=(1L<<end);
+            SingleRed|=(1L<<end);
         }else{
-            BitBoardFigures.SingleBlue|=(1L<<end);
+            SingleBlue|=(1L<<end);
         }
     }
 
@@ -430,30 +436,30 @@ public class BitMoves {
         }
     }
 
-    public static void isGameFinished(){
+    public static boolean isGameFinished(){
         //No more red pieces on board
         if(BitBoardFigures.SingleRed == 0 && BitBoardFigures.MixedRed == 0 && BitBoardFigures.DoubleRed == 0){
             System.out.println("Game won by Blue.");
-            return;
+            return true;
         }
         //No more blue pieces on board
         else if(BitBoardFigures.SingleBlue == 0 && BitBoardFigures.MixedBlue == 0 && BitBoardFigures.DoubleBlue == 0){
             System.out.println("Game won by Red.");
-            return;
+            return true;
         }
         //No more moves for player who is am zug
         if (BitBoardFigures.blueToMove) {
             String moves = possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
             if(moves.isEmpty()){
                 System.out.println("Game won by Red.");
-                return;
+                return true;
             }
         }
         else{
             String moves = possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
             if(moves.isEmpty()){
                 System.out.println("Game won by Blue.");
-                return;
+                return true;
             }
         }
 
@@ -465,12 +471,14 @@ public class BitMoves {
         // Check if blue on red home row
         if ((BitBoardFigures.SingleBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.MixedBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleBlue & BLUE_WIN_CONDITION) != 0){
             System.out.println("Game won by Blue.");
-            return;
+            return true;
         }
         // Check if blue on red home row
         if ((BitBoardFigures.SingleRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.MixedRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleRed & RED_WIN_CONDITION) != 0){
             System.out.println("Game won by Red.");
+            return true;
         }
+        return false;
 
     }
 

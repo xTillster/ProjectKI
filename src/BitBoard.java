@@ -46,6 +46,90 @@ public class BitBoard {
     }
     */
 
+    static public ValueMove alphaBeta(String[][] jumpBoard, boolean isMax, int depth){
+        return alphaBetaRecursion(jumpBoard, depth, -100000.0f, +100000.0f, isMax);
+    }
+
+    static public ValueMove alphaBetaRecursion(String[][] jumpBoard, int depth, float alpha, float beta, boolean isMax){
+        if(depth == 0 || BitMoves.isGameFinished()){
+            return new ValueMove(BitMoves.evaluatePosition(depth, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue), null, depth);
+        }
+
+        if (isMax){
+            //float value = alpha;
+            float value = -100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
+
+
+
+            for (Move move : jumpBoard.getLegalMoves(jumpBoard.getPossibleMoves(jumpBoard.blueToMove))) {
+                Board newBoard = new Board();
+                newBoard.setBoardContent(jumpBoard.deepCopyBoard(), jumpBoard.deepCopyBoardMap(), jumpBoard.blueToMove);
+                newBoard.makeMove(move);
+
+                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, false);
+
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v > value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
+                }
+
+                alpha = Math.max(alpha, value);
+
+                if (value >= beta) {
+                    //System.out.println("break");
+                    break;
+                }
+
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
+            }
+            return new ValueMove(value, bestMove, bestDepth);
+        } else {
+            //float value = beta;
+            float value = 100000.0f;
+            Move bestMove = null;
+            int bestDepth = depth;
+
+            for (Move move : jumpBoard.getLegalMoves(jumpBoard.getPossibleMoves(jumpBoard.blueToMove))) {
+                Board newBoard = new Board();
+                newBoard.setBoardContent(jumpBoard.deepCopyBoard(), jumpBoard.deepCopyBoardMap(), jumpBoard.blueToMove);
+                newBoard.makeMove(move);
+
+                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, true);
+
+                //value = Math.max(value, evaluation.v);
+                if (evaluation.v < value ||
+                        (evaluation.v == value && evaluation.depth > bestDepth)){
+                    value = evaluation.v;
+                    bestMove = move;
+                    bestDepth = evaluation.depth;
+                }
+
+                beta = Math.min(beta, value);
+
+                if (value <= alpha) {
+                    //System.out.println("break");
+                    break;
+                }
+
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
+
+            }
+            return new ValueMove(value, bestMove, bestDepth);
+        }
+    }
+
+
     public static void arrayToBitboards(String [][] jumpBoard, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
         String Binary;
         for (int i=0;i<64;i++) {
