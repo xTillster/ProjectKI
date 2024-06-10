@@ -14,12 +14,18 @@ public class Board {
     public HashMap<Field, Figures>[] figureMap = new HashMap[2];
     public int blueToMove;
 
+    //v2.0 enhanced
+    boolean isEmptyMoveSet = false;
+
+    //v2.0 enhanced
+    boolean isFigureOnLastRow = false;
+
     public static void main(String[] args) {
 
         Board board = new Board();
 
         //assumes given fen is correct
-        String init = "3bb2/b02b02b01/3b02bbb0/1b06/1r0r02r01r0/6r01/5r0r0r0/6 b";
+        String init = "b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r";
         String fen = init.substring(0, init.length() - 2);
 
         board.fenToBoard(fen);
@@ -28,7 +34,7 @@ public class Board {
         board.boardToString();
 
         boolean isMax = true;
-        while (!board.isGameFinished(board.blueToMove)) {
+        while (!board.isGameFinishedEnhanced(board.blueToMove)) {
 
             if (board.blueToMove == 1){
                 isMax = true;
@@ -56,11 +62,12 @@ public class Board {
     }
 
     static public ValueMove alphaBeta(Board board, boolean isMax){
+        //TODO: here would the time cutoff and iterative depth search be implemented for a game contest, however there are no boundaries yet
         return alphaBetaRecursion(board, 7, -100000.0f, +100000.0f, isMax);
     }
 
     static public ValueMove alphaBetaRecursion(Board board, int depth, float alpha, float beta, boolean isMax){
-        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+        if(depth == 0 || board.isGameFinishedEnhanced(board.blueToMove)){
             return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
@@ -70,7 +77,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -104,7 +111,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -137,7 +144,7 @@ public class Board {
     }
 
     static public ValueMove alphaBetaRecursionNew(Board board, int depth, float alpha, float beta, boolean isMax){
-        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+        if(depth == 0 || board.isGameFinishedEnhanced(board.blueToMove)){
             return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
@@ -147,7 +154,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -181,7 +188,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -214,11 +221,12 @@ public class Board {
     }
 
     static public ValueMove miniMax(Board board, boolean isMax) {
-        return miniMaxRecursion(board, 4, isMax);
+        //TODO: here would the time cutoff and iterative depth search be implemented for a game contest, however there are no boundaries yet
+        return miniMaxRecursion(board, 5, isMax);
     }
 
     static public ValueMove miniMaxRecursion(Board board, int depth, boolean isMax){
-        if(depth == 0 || board.isGameFinished(board.blueToMove)){
+        if(depth == 0 || board.isGameFinishedEnhanced(board.blueToMove)){
             return new ValueMove(board.evaluatePosition(depth), null, depth);
         }
 
@@ -227,7 +235,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -248,7 +256,7 @@ public class Board {
             Move bestMove = null;
             int bestDepth = depth;
 
-            for (Move move : board.getLegalMoves(board.getPossibleMoves(board.blueToMove))) {
+            for (Move move : board.getPossibleAndLegalMoves(board.blueToMove)) {
                 Board newBoard = new Board();
                 newBoard.setBoardContent(board.deepCopyBoard(), board.deepCopyBoardMap(), board.blueToMove);
                 newBoard.makeMove(move);
@@ -632,8 +640,343 @@ public class Board {
         }
     }
 
-    public boolean isGameFinished(int blueToMove){
+    //v2.0 enhanced, doesn't work if fen init position is already finished
+    boolean isGameFinishedEnhanced(int blueToMove){
         //index 0 are red figures, index 1 are blue figures
+        if(figureMap[0].isEmpty() || figureMap[1].isEmpty()) return true;
+
+        //game is over if current player has no moves left, improved
+        //if (getPossibleAndLegalMoves(blueToMove).isEmpty()) return true;
+        if (isEmptyMoveSet) return true;
+
+        //maybe replace with flag in makeMove?
+        /*for(int i = 1; i<7; i++){
+            //check if red has figure on blue home row
+            switch (board[0][i]){
+                case SINGLE_RED, DOUBLE_RED, MIXED_RED -> {
+                    return true;
+                }
+                case SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> { }
+                case null -> { }
+            }
+
+            //check if blue has figure on red home row
+            switch (board[7][i]){
+                case SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> {
+                    return true;
+                }
+                case SINGLE_RED, DOUBLE_RED, MIXED_RED -> { }
+                case null -> { }
+            }
+
+        }*/
+
+        if (isFigureOnLastRow) return true;
+
+        return false;
+    }
+
+    //v2.0 enhanced
+    Set<Move> getPossibleAndLegalMoves(int blueToMove){
+        HashSet<Move> moves = new HashSet<>();
+
+        for(Map.Entry<Field, Figures> entry: figureMap[blueToMove].entrySet()){
+
+            //if blue is to move: a MIXED_RED has no possible moves (the blue single is blocked by the red on top)
+            if (blueToMove == 1) {
+                if (entry.getValue() == Figures.MIXED_RED) {
+                    continue;
+                }
+            }
+
+            //if red is to move: a MIXED_BLUE has no possible moves (the red single is blocked by the blue on top)
+            if (blueToMove == 0) {
+                if (entry.getValue() == Figures.MIXED_BLUE) {
+                    continue;
+                }
+            }
+
+            switch (entry.getValue()){
+                //find all theoretically possible moves and subtract not allowed moves
+                //time complexity not great
+                case SINGLE_RED -> {
+                    Move move1 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col+1));
+                    Move move2 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-1, entry.getKey().col);
+                    Move move3 = new Move(entry.getKey().row, entry.getKey().col, (entry.getKey().row-1), (char) (entry.getKey().col+1));
+                    Move move4 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col-1));
+                    Move move5 = new Move(entry.getKey().row, entry.getKey().col, (entry.getKey().row-1), (char) (entry.getKey().col-1));
+
+                    if (isLegalMove(move1)){
+                        moves.add(move1);
+                    }
+                    if (isLegalMove(move2)){
+                        moves.add(move2);
+                    }
+                    if (isLegalMove(move3)){
+                        moves.add(move3);
+                    }
+                    if (isLegalMove(move4)){
+                        moves.add(move4);
+                    }
+                    if (isLegalMove(move5)){
+                        moves.add(move5);
+                    }
+                }
+                case SINGLE_BLUE -> {
+                    Move move1 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col+1));
+                    Move move2 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, entry.getKey().col);
+                    Move move3 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, (char) (entry.getKey().col+1));
+                    Move move4 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col-1));
+                    Move move5 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, (char) (entry.getKey().col-1));
+
+                    if (isLegalMove(move1)){
+                        moves.add(move1);
+                    }
+                    if (isLegalMove(move2)){
+                        moves.add(move2);
+                    }
+                    if (isLegalMove(move3)){
+                        moves.add(move3);
+                    }
+                    if (isLegalMove(move4)){
+                        moves.add(move4);
+                    }
+                    if (isLegalMove(move5)){
+                        moves.add(move5);
+                    }
+                }
+                case DOUBLE_RED, MIXED_RED -> {
+                    Move move1 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-2, (char) (entry.getKey().col+1));
+                    Move move2 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-2, (char) (entry.getKey().col-1));
+                    Move move3 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-1, (char) (entry.getKey().col+2));
+                    Move move4 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-1, (char) (entry.getKey().col-2));
+
+                    if (isLegalMove(move1)){
+                        moves.add(move1);
+                    }
+                    if (isLegalMove(move2)){
+                        moves.add(move2);
+                    }
+                    if (isLegalMove(move3)){
+                        moves.add(move3);
+                    }
+                    if (isLegalMove(move4)){
+                        moves.add(move4);
+                    }
+                }
+                case DOUBLE_BLUE, MIXED_BLUE -> {
+                    Move move1 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+2, (char) (entry.getKey().col+1));
+                    Move move2 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+2, (char) (entry.getKey().col-1));
+                    Move move3 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, (char) (entry.getKey().col+2));
+                    Move move4 = new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, (char) (entry.getKey().col-2));
+
+                    if (isLegalMove(move1)){
+                        moves.add(move1);
+                    }
+                    if (isLegalMove(move2)){
+                        moves.add(move2);
+                    }
+                    if (isLegalMove(move3)){
+                        moves.add(move3);
+                    }
+                    if (isLegalMove(move4)){
+                        moves.add(move4);
+                    }
+                }
+            }
+        }
+
+        isEmptyMoveSet = moves.isEmpty();
+        return moves;
+    }
+
+    //v2.0 enhanced
+    boolean isLegalMove(Move move){
+        boolean notLegal = false;
+
+        Figures start = board[move.start_row][move.start_col - 'a'];
+        Figures target;
+
+        //TODO adjust for ascii
+        int i = move.end_row;
+        int j = move.end_col - 'a';
+
+        //removes all moves to corners
+        if ((i == 0 && j == 0) || (i == 0 && j == 7) || (i == 7 && j == 0) || (i == 7 && j == 7)){
+            return notLegal;
+        }
+
+        //remove all moves out of board
+        try {
+            target = board[move.end_row][move.end_col - 'a'];
+        } catch (ArrayIndexOutOfBoundsException e){
+            return notLegal;
+        }
+
+        //add all RED figure capture or tower building moves
+        /*if (start == Figures.SINGLE_RED){
+            switch(target){
+                case SINGLE_RED-> {
+                    //all okay but capture
+                    if(isNormalMove(move)){
+                        return true;
+                    }
+                }
+                case SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> {
+                    //all okay but normal move
+                    if(isNormalCapture(move)){
+                        return true;
+                    }
+                }
+                case DOUBLE_RED, MIXED_RED -> { return notLegal; }
+                case null -> {
+                    //add all moves to empty field
+                    if(isNormalMove(move)){
+                        return true;
+                    }
+                }
+            }
+        }
+
+        //add all RED figure capture or tower building moves
+        if (start == Figures.SINGLE_BLUE){
+            switch(target){
+                case SINGLE_BLUE -> {
+                    //all okay but capture
+                    if(isNormalMove(move)){
+                        return true;
+                    }
+                }
+                case SINGLE_RED, DOUBLE_RED, MIXED_RED -> {
+                    //all okay but normal move
+                    if(isNormalCapture(move)){
+                        return true;
+                    }
+                }
+                case DOUBLE_BLUE, MIXED_BLUE -> { return notLegal; }
+                case null -> {
+                    //add all moves to empty field
+                    if(isNormalMove(move)){
+                        return true;
+                    }
+                }
+            }
+        }
+
+        if (start == Figures.MIXED_RED || start == Figures.DOUBLE_RED){
+            switch(target){
+                case SINGLE_RED, SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> {
+                    //capture and tower
+                    return true;
+                }
+                case DOUBLE_RED, MIXED_RED -> { return notLegal; }
+                case null -> {
+                    //add all moves to empty field
+                    return true;
+                }
+            }
+        }
+
+        //add all RED figure capture or tower building moves
+        if (start == Figures.MIXED_BLUE || start == Figures.DOUBLE_BLUE){
+            switch(target){
+                case SINGLE_BLUE, SINGLE_RED, DOUBLE_RED, MIXED_RED -> {
+                    //capture and tower
+                    return true;
+                }
+                case DOUBLE_BLUE, MIXED_BLUE -> { return notLegal; }
+                case null -> {
+                    //add all moves to empty field
+                    return true;
+                }
+            }
+        }*/
+
+        switch(start){
+            case SINGLE_RED -> {
+                switch (target) {
+                    case SINGLE_RED -> {
+                        //all okay but capture
+                        if (isNormalMove(move)) {
+                            return true;
+                        }
+                    }
+                    case SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> {
+                        //all okay but normal move
+                        if (isNormalCapture(move)) {
+                            return true;
+                        }
+                    }
+                    case DOUBLE_RED, MIXED_RED -> {
+                        return notLegal;
+                    }
+                    case null -> {
+                        //add all moves to empty field
+                        if (isNormalMove(move)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            case SINGLE_BLUE -> {
+                switch (target) {
+                    case SINGLE_BLUE -> {
+                        //all okay but capture
+                        if (isNormalMove(move)) {
+                            return true;
+                        }
+                    }
+                    case SINGLE_RED, DOUBLE_RED, MIXED_RED -> {
+                        //all okay but normal move
+                        if (isNormalCapture(move)) {
+                            return true;
+                        }
+                    }
+                    case DOUBLE_BLUE, MIXED_BLUE -> {
+                        return notLegal;
+                    }
+                    case null -> {
+                        //add all moves to empty field
+                        if (isNormalMove(move)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            case MIXED_RED, DOUBLE_RED -> {
+                switch(target){
+                    case SINGLE_RED, SINGLE_BLUE, DOUBLE_BLUE, MIXED_BLUE -> {
+                        //capture and tower
+                        return true;
+                    }
+                    case DOUBLE_RED, MIXED_RED -> { return notLegal; }
+                    case null -> {
+                        //add all moves to empty field
+                        return true;
+                    }
+                }
+            }
+            case MIXED_BLUE, DOUBLE_BLUE -> {
+                switch(target){
+                    case SINGLE_BLUE, SINGLE_RED, DOUBLE_RED, MIXED_RED -> {
+                        //capture and tower
+                        return true;
+                    }
+                    case DOUBLE_BLUE, MIXED_BLUE -> { return notLegal; }
+                    case null -> {
+                        //add all moves to empty field
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return notLegal;
+    }
+
+    /* v1.0
+    public boolean isGameFinished(int blueToMove){
+            //index 0 are red figures, index 1 are blue figures
         if(figureMap[0].isEmpty() || figureMap[1].isEmpty()) return true;
 
         //TODO clean this up
@@ -662,8 +1005,9 @@ public class Board {
         }
 
         return false;
-    }
+    }*/
 
+    /* v1.0
     public Set<Move> getPossibleMoves(int blueToMove){
         HashSet<Move> moves = new HashSet<>();
 
@@ -687,21 +1031,6 @@ public class Board {
                 //find all theoretically possible moves and subtract not allowed moves
                 //time complexity not great
                 case SINGLE_RED -> {
-                    /*if (entry.getKey().col == 0){
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col+1));
-                    } else if (entry.getKey().col == 7) {
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col-1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col-1));
-                    }  else {
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col-1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row-1), entry.getKey().col-1));
-                    }*/
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col+1)));
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row-1, entry.getKey().col));
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, (entry.getKey().row-1), (char) (entry.getKey().col+1)));
@@ -709,21 +1038,6 @@ public class Board {
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, (entry.getKey().row-1), (char) (entry.getKey().col-1)));
                 }
                 case SINGLE_BLUE -> {
-                    /*if (entry.getKey().col == 0){
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col+1));
-                    } else if (entry.getKey().col == 7) {
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col-1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col-1));
-                    }  else {
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col+1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, entry.getKey().col-1));
-                        moves.add(new Move(entry.getKey().row, entry.getKey().col, (char) (entry.getKey().row+1), entry.getKey().col-1));
-                    }*/
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row, (char) (entry.getKey().col+1)));
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, entry.getKey().col));
                     moves.add(new Move(entry.getKey().row, entry.getKey().col, entry.getKey().row+1, (char) (entry.getKey().col+1)));
@@ -746,8 +1060,9 @@ public class Board {
         }
 
         return moves;
-    }
+    }*/
 
+    /* v1.0
     public Set<Move> getLegalMoves(Set<Move> moves){
         HashSet<Move> legalMoves = new HashSet<>();
 
@@ -867,7 +1182,7 @@ public class Board {
         }
 
         return legalMoves;
-    }
+    }*/
 
     public boolean isNormalMove(Move move){
         if(move.start_col - move.end_col == 0 && move.start_row - move.end_row != 0){

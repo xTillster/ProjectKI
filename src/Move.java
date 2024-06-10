@@ -37,6 +37,6 @@ public class Move {
 
     @Override
     public String toString() {
-        return start_col + "" + (start_row + 1) + "-" + end_col + (end_row + 1);
+        return (char)(start_col - 32) + "" + (start_row + 1) + "-" + (char)(end_col - 32) + (end_row + 1);
     }
 }
