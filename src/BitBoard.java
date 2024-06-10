@@ -1,11 +1,40 @@
+import java.awt.geom.QuadCurve2D;
 import java.util.Arrays;
 
 import static java.lang.Character.isDigit;
 
 public class BitBoard {
+    static long SingleRedCopy = 0;
+    static long SingleBlueCopy = 0;
+    static long DoubleRedCopy = 0;
+    static long DoubleBlueCopy = 0;
+    static long MixedRedCopy = 0;
+    static long MixedBlueCopy = 0;
 
     public static void main(String[] args) {
-        importFEN("6/1b06/1r0b02bb2/2r02b02/8/5rr2/2r03r01/6 b");
+        importFEN("2b01b01/2bb5/3b02b01/3r0brb0r01/1b06/8/2r0rr4/2r01r0r0 b");
+        deepCopyBoard(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        System.out.println("initiate evaluation: " + BitMoves.evaluatePosition(0, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
+        boolean isMax = true;
+        while (!BitMoves.isGameFinished()) {
+
+            if (BitBoardFigures.blueToMove){
+                isMax = true;
+            } else {
+                isMax = false;
+            }
+
+            BitValueMoves vm = alphaBeta(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue, isMax, 4);
+
+            String move = vm.move;
+            System.out.println("Move made: " + vm.move + " on expected eval " + vm.v);
+            BitMoves.makeMove(move, true);
+            deepCopyFigures(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy);
+            BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
+
+        }
+
+
     }
 
     /*public static void initiateBoard(){
@@ -46,35 +75,43 @@ public class BitBoard {
     }
     */
 
-    static public ValueMove alphaBeta(String[][] jumpBoard, boolean isMax, int depth){
-        return alphaBetaRecursion(jumpBoard, depth, -100000.0f, +100000.0f, isMax);
+    static public BitValueMoves alphaBeta(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue, boolean isMax, int depth){
+        return alphaBetaRecursion(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue, depth, -100000.0f, +100000.0f, isMax);
     }
 
-    static public ValueMove alphaBetaRecursion(String[][] jumpBoard, int depth, float alpha, float beta, boolean isMax){
+    static public BitValueMoves alphaBetaRecursion(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue, int depth, float alpha, float beta, boolean isMax){
         if(depth == 0 || BitMoves.isGameFinished()){
-            return new ValueMove(BitMoves.evaluatePosition(depth, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue), null, depth);
+//            System.out.println("bitboard: " + BitMoves.evaluatePosition(depth, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
+//            System.out.println("copy: " + BitMoves.evaluatePosition(depth, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue));
+            return new BitValueMoves(BitMoves.evaluatePosition(depth, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue ), null, depth);
         }
 
         if (isMax){
             //float value = alpha;
             float value = -100000.0f;
-            Move bestMove = null;
+            String bestMove = null;
             int bestDepth = depth;
+            String moves;
 
+            if (BitBoardFigures.blueToMove){
+                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+                System.out.println(moves);
+            }else{
+                moves = BitMoves.possibleMovesRed(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+                System.out.println(moves);
+            }
 
+            for (int i=0; i<moves.length()-4; i+=4) {
+                deepCopyBoard(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+                BitMoves.makeMove(moves.substring(i, i + 4), true);
 
-            for (Move move : jumpBoard.getLegalMoves(jumpBoard.getPossibleMoves(jumpBoard.blueToMove))) {
-                Board newBoard = new Board();
-                newBoard.setBoardContent(jumpBoard.deepCopyBoard(), jumpBoard.deepCopyBoardMap(), jumpBoard.blueToMove);
-                newBoard.makeMove(move);
-
-                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, false);
+                BitValueMoves evaluation = alphaBetaRecursion(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy,depth - 1, alpha, beta, false);
 
                 //value = Math.max(value, evaluation.v);
                 if (evaluation.v > value ||
                         (evaluation.v == value && evaluation.depth > bestDepth)){
                     value = evaluation.v;
-                    bestMove = move;
+                    bestMove = moves.substring(i, i + 4);
                     bestDepth = evaluation.depth;
                 }
 
@@ -90,25 +127,31 @@ public class BitBoard {
                     break;
                 }*/
             }
-            return new ValueMove(value, bestMove, bestDepth);
+            return new BitValueMoves(value, bestMove, bestDepth);
         } else {
             //float value = beta;
             float value = 100000.0f;
-            Move bestMove = null;
+            String bestMove = null;
             int bestDepth = depth;
+            String moves;
 
-            for (Move move : jumpBoard.getLegalMoves(jumpBoard.getPossibleMoves(jumpBoard.blueToMove))) {
-                Board newBoard = new Board();
-                newBoard.setBoardContent(jumpBoard.deepCopyBoard(), jumpBoard.deepCopyBoardMap(), jumpBoard.blueToMove);
-                newBoard.makeMove(move);
+            if (BitBoardFigures.blueToMove){
+                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            }else{
+                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+            }
 
-                ValueMove evaluation = alphaBetaRecursion(newBoard, depth - 1, alpha, beta, true);
+            for (int i=0; i<moves.length()-4; i+=4) {
+                deepCopyBoard(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
+                BitMoves.makeMove(moves.substring(i, i + 4), true);
+
+                BitValueMoves evaluation = alphaBetaRecursion(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy,depth - 1, alpha, beta, false);
 
                 //value = Math.max(value, evaluation.v);
                 if (evaluation.v < value ||
                         (evaluation.v == value && evaluation.depth > bestDepth)){
                     value = evaluation.v;
-                    bestMove = move;
+                    bestMove = moves.substring(i, i + 4);
                     bestDepth = evaluation.depth;
                 }
 
@@ -119,16 +162,36 @@ public class BitBoard {
                     break;
                 }
 
-                /*if (alpha >= beta) {
+                /* if (alpha >= beta) {
                     //System.out.println("break");
                     break;
                 }*/
 
             }
-            return new ValueMove(value, bestMove, bestDepth);
+            return new BitValueMoves(value, bestMove, bestDepth);
         }
     }
 
+    public static void deepCopyBoard(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        SingleRedCopy = SingleRed;
+        SingleBlueCopy = SingleBlue;
+        DoubleRedCopy = DoubleRed;
+        DoubleBlueCopy = DoubleBlue;
+        MixedRedCopy = MixedRed;
+        MixedBlueCopy= MixedBlue;
+    }
+
+    public static void deepCopyFigures(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        System.out.println(BitBoardFigures.SingleRed);
+        BitBoardFigures.SingleRed = SingleRed;
+        System.out.println(SingleRed);
+        System.out.println(BitBoardFigures.SingleRed);
+        BitBoardFigures.SingleBlue = SingleBlue;
+        BitBoardFigures.DoubleRed = DoubleRed;
+        BitBoardFigures.DoubleBlue = DoubleBlue;
+        BitBoardFigures.MixedRed = MixedRed;
+        BitBoardFigures.MixedBlue= MixedBlue;
+    }
 
     public static void arrayToBitboards(String [][] jumpBoard, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
         String Binary;
@@ -258,4 +321,19 @@ public class BitBoard {
         BitBoardFigures.blueToMove = (fenString.charAt(++charIndex) == 'b');
         drawArray(BitBoardFigures.SingleRed,BitBoardFigures.SingleBlue,BitBoardFigures.DoubleRed,BitBoardFigures.DoubleBlue,BitBoardFigures.MixedRed,BitBoardFigures.MixedBlue);
     }
+
+    static String moveToString(String move){
+        if(move!= null) {
+            int coltp = Character.getNumericValue(move.charAt(1));
+            char start_col = (char) (coltp + 97);
+            coltp = Character.getNumericValue(move.charAt(3));
+            char end_col = (char) (coltp + 97);
+            int start_row = Character.getNumericValue(move.charAt(0)) + 1;
+            int end_row = Character.getNumericValue(move.charAt(2)) + 1;
+
+            return "" + start_col + start_row + "-" + end_col + end_row;
+        }else return move;
+    }
+
+
 }
