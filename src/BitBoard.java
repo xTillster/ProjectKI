@@ -4,33 +4,25 @@ import java.util.Arrays;
 import static java.lang.Character.isDigit;
 
 public class BitBoard {
-    static long SingleRedCopy = 0;
-    static long SingleBlueCopy = 0;
-    static long DoubleRedCopy = 0;
-    static long DoubleBlueCopy = 0;
-    static long MixedRedCopy = 0;
-    static long MixedBlueCopy = 0;
 
     public static void main(String[] args) {
-        importFEN("2b01b01/2bb5/3b02b01/3r0brb0r01/1b06/8/2r0rr4/2r01r0r0 b");
-        deepCopyBoard(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-        System.out.println("initiate evaluation: " + BitMoves.evaluatePosition(0, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
-        boolean isMax = true;
+        importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 b");
+        System.out.println("Initial evaluation: " + BitMoves.evaluatePosition(0, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
+        boolean isMax;
         while (!BitMoves.isGameFinished()) {
-
             if (BitBoardFigures.blueToMove){
                 isMax = true;
             } else {
                 isMax = false;
             }
-
-            BitValueMoves vm = alphaBeta(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue, isMax, 4);
+            BitValueMoves vm = alphaBeta( isMax, 4);
 
             String move = vm.move;
+            System.out.println("Move " + vm.move);
             System.out.println("Move made: " + moveToString(vm.move) + " on expected eval " + vm.v);
             BitMoves.makeMove(move, true);
-            deepCopyFigures(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy);
             BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
+            System.out.println(BitMoves.isGameFinished());
 
         }
 
@@ -75,15 +67,14 @@ public class BitBoard {
     }
     */
 
-    static public BitValueMoves alphaBeta(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue, boolean isMax, int depth){
-        return alphaBetaRecursion(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue, depth, -100000.0f, +100000.0f, isMax);
+    static public BitValueMoves alphaBeta(boolean isMax, int depth){
+        return alphaBetaRecursion(depth, -100000.0f, +100000.0f, isMax);
     }
 
-    static public BitValueMoves alphaBetaRecursion(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue, int depth, float alpha, float beta, boolean isMax){
+    static public BitValueMoves alphaBetaRecursion(int depth, float alpha, float beta, boolean isMax){
         if(depth == 0 || BitMoves.isGameFinished()){
-//            System.out.println("bitboard: " + BitMoves.evaluatePosition(depth, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
 //            System.out.println("copy: " + BitMoves.evaluatePosition(depth, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue));
-            return new BitValueMoves(BitMoves.evaluatePosition(depth, SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue ), null, depth);
+            return new BitValueMoves(BitMoves.evaluatePosition(depth, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue), null, depth);
         }
 
         if (isMax){
@@ -93,21 +84,21 @@ public class BitBoard {
             int bestDepth = depth;
             String moves;
 
-            if (BitBoardFigures.blueToMove){
-                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-                System.out.println(moves);
-            }else{
-                moves = BitMoves.possibleMovesRed(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-                System.out.println(moves);
-            }
+
+            moves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+
 
             for (int i=0; i<moves.length()-4; i+=4) {
-                deepCopyBoard(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-                BitMoves.makeMove(moves.substring(i, i + 4), true);
+                String makeMove = BitMoves.makeMove(moves.substring(i, i + 4), true);
+                BitValueMoves evaluation = alphaBetaRecursion(depth - 1, alpha, beta, false);
 
-                BitValueMoves evaluation = alphaBetaRecursion(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy,depth - 1, alpha, beta, false);
+                System.out.println("After move is done:" + moveToString(makeMove));
+                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+                BitMoves.unmakeStack.push(makeMove);
+                BitMoves.undoMove();
+                System.out.println("After undoing " + moveToString(makeMove));
+                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
-                //value = Math.max(value, evaluation.v);
                 if (evaluation.v > value ||
                         (evaluation.v == value && evaluation.depth > bestDepth)){
                     value = evaluation.v;
@@ -115,17 +106,18 @@ public class BitBoard {
                     bestDepth = evaluation.depth;
                 }
 
+
                 alpha = Math.max(alpha, value);
 
-                /*if (value >= beta) {
-                    //System.out.println("break");
-                    break;
-                }*/
-
-                if (beta <= alpha) {
+                if (value >= beta) {
                     //System.out.println("break");
                     break;
                 }
+
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
             }
             return new BitValueMoves(value, bestMove, bestDepth);
         } else {
@@ -135,17 +127,22 @@ public class BitBoard {
             int bestDepth = depth;
             String moves;
 
-            if (BitBoardFigures.blueToMove){
-                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-            }else{
-                moves = BitMoves.possibleMovesBlue(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-            }
+
+            moves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+
 
             for (int i=0; i<moves.length()-4; i+=4) {
-                deepCopyBoard(SingleRed, SingleBlue, DoubleRed, DoubleBlue, MixedRed, MixedBlue);
-                BitMoves.makeMove(moves.substring(i, i + 4), true);
+                String makeMove = BitMoves.makeMove(moves.substring(i, i + 4), true);
 
-                BitValueMoves evaluation = alphaBetaRecursion(SingleRedCopy, SingleBlueCopy, DoubleRedCopy, DoubleBlueCopy, MixedRedCopy, MixedBlueCopy,depth - 1, alpha, beta, false);
+
+                BitValueMoves evaluation = alphaBetaRecursion(depth - 1, alpha, beta, true);
+                System.out.println("After move is done: " + moveToString(makeMove));
+                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+                BitMoves.unmakeStack.push(makeMove);
+                BitMoves.undoMove();
+                System.out.println("After undoing " + moveToString(makeMove));
+                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+
 
                 //value = Math.max(value, evaluation.v);
                 if (evaluation.v < value ||
@@ -157,35 +154,32 @@ public class BitBoard {
 
                 beta = Math.min(beta, value);
 
-                /*if (value <= alpha) {
-                    //System.out.println("break");
-                    break;
-                }*/
-
-                if (beta <= beta) {
+                if (value <= alpha) {
                     //System.out.println("break");
                     break;
                 }
+
+                /*if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }*/
 
             }
             return new BitValueMoves(value, bestMove, bestDepth);
         }
     }
 
-    public static void deepCopyBoard(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+    /*public static void deepCopyBoard(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
         SingleRedCopy = SingleRed;
         SingleBlueCopy = SingleBlue;
         DoubleRedCopy = DoubleRed;
         DoubleBlueCopy = DoubleBlue;
         MixedRedCopy = MixedRed;
         MixedBlueCopy= MixedBlue;
-    }
+    }*/
 
     public static void deepCopyFigures(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
-        System.out.println(BitBoardFigures.SingleRed);
         BitBoardFigures.SingleRed = SingleRed;
-        System.out.println(SingleRed);
-        System.out.println(BitBoardFigures.SingleRed);
         BitBoardFigures.SingleBlue = SingleBlue;
         BitBoardFigures.DoubleRed = DoubleRed;
         BitBoardFigures.DoubleBlue = DoubleBlue;

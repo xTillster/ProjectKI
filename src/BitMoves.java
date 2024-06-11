@@ -25,24 +25,36 @@ public class BitMoves {
     static boolean colorRed = true;
     static boolean capture = false;
     static boolean blueWon;
+    static String startFigure = "";
+    static String endFigure = "";
     //String format: 0-3 move, 4 source figure, 5 target figure
     static Stack<String> unmakeStack = new Stack<>();
+    public static int counter;
+
 
     public static void main(String[] args) {
-        BitBoard.importFEN("6/1b06/1r0b02bb2/2r02b02/8/5rr2/2r03r01/6 r");
-//      String a = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-//        String b = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-//      System.out.println(BitBoardFigures.SingleRed);
-
-//      makeMove(b, true);
+        BitBoard.importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r");
+        String a = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        String b = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        //System.out.println("Single Blue: " + BitBoardFigures.SingleBlue);
+        //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
+        System.out.println("Moves: " + a + "\nLesbare moves: " + possibleMovesToString(a));
+        String makeMove = makeMove(b.substring(0, 4), true);
+        unmakeStack.push(makeMove);
+        BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
         isGameFinished();
-        Float c = evaluatePosition(1, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-        System.out.println(c);
-
+        //System.out.println("Single Blue: " +BitBoardFigures.SingleBlue);
+        //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
+        System.out.println("Undo Move: ");
+        //undoMove();
+        BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        //System.out.println("Single Blue: " +BitBoardFigures.SingleBlue);
+        //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
     }
 
     public static float evaluatePosition(int depth, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
         float value= 0;
+        counter++;
         if(isGameFinished()) {
             if (blueWon) {
                 return +1000.0f + depth;
@@ -100,7 +112,7 @@ public class BitMoves {
         BLUE_ROOK = ~(SingleBlue);
         EMPTY_BLUE = ~(SingleRed | DoubleRed | MixedRed | DoubleBlue | MixedBlue);
         EMPTY_KNIGHT_BLUE = ~(DoubleBlue | MixedBlue);
-        return possibleMovesSB(SingleBlue)+possibleMovesNB(MixedBlue)+possibleMovesNB(DoubleBlue);
+        return possibleMovesNB(DoubleBlue) + possibleMovesSB(SingleBlue)+possibleMovesNB(MixedBlue);
     }
 
     public static String possibleMovesRed(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
@@ -109,7 +121,7 @@ public class BitMoves {
         RED_ROOK = ~(SingleRed);
         EMPTY_RED = ~(DoubleRed | MixedRed | DoubleBlue | MixedBlue| SingleBlue);
         EMPTY_KNIGHT_RED = ~(DoubleRed | MixedRed);
-        return possibleMovesSR(SingleRed)+possibleMovesNR(MixedRed)+possibleMovesNR(DoubleRed);
+        return possibleMovesNR(DoubleRed) + possibleMovesSR(SingleRed)+possibleMovesNR(MixedRed);
     }
     // Erklärung: i ist die Position, auf die die Figur kann z.B. 51, dann kann die Figur auf das Feld 51
     // Felder werden von unten gezählt = erste Reihe beginnt bei 0
@@ -170,17 +182,9 @@ public class BitMoves {
 
     private static String possibleMovesNR(long knightRed) {
         String knightRedMoves = "";
-        //2 left 1 up
-        long KNIGHTRED_MOVES = (knightRed >> 10)& EMPTY_KNIGHT_RED & ~FILE_GH & ~EDGE_0;
-        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
-            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
-//                System.out.println("2 left 1 up " +i);
-                knightRedMoves += "" + (i / 8 + 1) + (i % 8 + 2) + (i / 8) + (i % 8);
-//                System.out.println(knightRedMoves);
-            }
-        }
+
         //1 right 2 up
-        KNIGHTRED_MOVES = (knightRed >> 15) & EMPTY_KNIGHT_RED & ~FILE_H & ~EDGE_7 &~EDGE_0;
+        long KNIGHTRED_MOVES = (knightRed >> 15) & EMPTY_KNIGHT_RED & ~FILE_H & ~EDGE_7 &~EDGE_0;
         for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
             if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
 //                System.out.println("1 right 2 up " + i);
@@ -194,6 +198,15 @@ public class BitMoves {
             if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
 //                System.out.println("1 left 2 up " +i);
                 knightRedMoves += "" + (i / 8 + 2) + (i % 8 + 1) + (i / 8) + (i % 8);
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //2 left 1 up
+        KNIGHTRED_MOVES = (knightRed >> 10)& EMPTY_KNIGHT_RED & ~FILE_GH & ~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("2 left 1 up " +i);
+                knightRedMoves += "" + (i / 8 + 1) + (i % 8 + 2) + (i / 8) + (i % 8);
 //                System.out.println(knightRedMoves);
             }
         }
@@ -260,17 +273,8 @@ public class BitMoves {
 
     private static String possibleMovesNB(long knightBlue) {
         String knightBlueMoves = "";
-        //2 left 1 down
-        long KNIGHTRED_MOVES = (knightBlue << 6)& EMPTY_KNIGHT_BLUE & ~FILE_GH& ~EDGE_56;
-        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
-            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
-//                System.out.println("2 left 1 down " +i);
-                knightBlueMoves += "" + (i / 8 - 1) + (i % 8+2) + (i / 8) + (i % 8);
-//                System.out.println(knightRedMoves);
-            }
-        }
         //1 left 2 down
-        KNIGHTRED_MOVES = (knightBlue << 15) & EMPTY_KNIGHT_BLUE & ~FILE_A & ~EDGE_56;
+        long KNIGHTRED_MOVES = (knightBlue << 15) & EMPTY_KNIGHT_BLUE & ~FILE_A & ~EDGE_56;
         for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
             if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
 //                System.out.println("1 left 2 down " + i);
@@ -287,6 +291,15 @@ public class BitMoves {
 //                System.out.println(knightRedMoves);
             }
         }
+        //2 left 1 down
+        KNIGHTRED_MOVES = (knightBlue << 6)& EMPTY_KNIGHT_BLUE & ~FILE_GH& ~EDGE_56;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("2 left 1 down " +i);
+                knightBlueMoves += "" + (i / 8 - 1) + (i % 8+2) + (i / 8) + (i % 8);
+//                System.out.println(knightRedMoves);
+            }
+        }
         //2 right 1 down
         KNIGHTRED_MOVES = (knightBlue << 10) & EMPTY_BLUE & ~FILE_AB & ~EDGE_63;
         for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
@@ -300,7 +313,320 @@ public class BitMoves {
         return knightBlueMoves;
     }
 
-    public static void makeMove(String moves, boolean start){
+    public static void undoMove(){
+        String move = unmakeStack.pop();
+        int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
+        int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        int start_figure =move.charAt(4);
+        int end_figure =move.charAt(5);
+
+        switch (start_figure){
+            case 'S':
+                BitBoardFigures.SingleRed|=(1L<<start);
+                break;
+            case 'D':
+                BitBoardFigures.DoubleRed|=(1L<<start);
+                BitBoardFigures.SingleRed&=~(1L<<start);
+                break;
+            case 'M':
+                BitBoardFigures.MixedRed|=(1L<<start);
+                BitBoardFigures.SingleBlue&=~(1L<<start);
+                break;
+            case 's':
+                BitBoardFigures.SingleBlue|=(1L<<start);
+                break;
+            case 'd':
+                BitBoardFigures.DoubleBlue|=(1L<<start);
+                BitBoardFigures.SingleBlue&=~(1L<<start);
+                break;
+            case 'm':
+                BitBoardFigures.MixedBlue|=(1L<<start);
+                BitBoardFigures.SingleRed&=~(1L<<start);
+                break;
+        }
+        switch (end_figure){
+            case 'S':
+                BitBoardFigures.SingleRed|=(1L<<end);
+                break;
+            case 'D':
+                BitBoardFigures.DoubleRed|=(1L<<end);
+                BitBoardFigures.SingleRed&=~(1L<<end);
+                break;
+            case 'M':
+                BitBoardFigures.MixedRed|=(1L<<end);
+                BitBoardFigures.SingleBlue&=~(1L<<end);
+                break;
+            case 's':
+                BitBoardFigures.SingleBlue|=(1L<<end);
+                break;
+            case 'd':
+                BitBoardFigures.DoubleBlue|=(1L<<end);
+                BitBoardFigures.SingleBlue&=~(1L<<end);
+                break;
+            case 'm':
+                BitBoardFigures.MixedBlue|=(1L<<end);
+                BitBoardFigures.SingleRed&=~(1L<<end);
+                break;
+            case 'e':
+                if(colorRed){
+                    BitBoardFigures.SingleRed&=~(1L<<end);
+                }
+                else{
+                    BitBoardFigures.SingleBlue&=~(1L<<end);
+                }
+
+        }
+    }
+
+    public static String makeMove(String moves, boolean start){
+        //startfeld
+
+        if (start) {
+            String start_result = "";
+
+
+            start_result += BitMoves.makeStartMove(BitBoardFigures.SingleRed, moves, 'S');
+            if (start_result.isEmpty()) {
+                start_result += BitMoves.makeStartMove(BitBoardFigures.SingleBlue, moves, 's');
+            }
+            if(start_result.isEmpty()) {
+                start_result += BitMoves.makeStartMove(BitBoardFigures.DoubleRed, moves, 'D');
+            }
+            if (start_result.isEmpty()) {
+                start_result += BitMoves.makeStartMove(BitBoardFigures.DoubleBlue, moves, 'd');
+            }
+            if(start_result.isEmpty()) {
+                start_result += BitMoves.makeStartMove(BitBoardFigures.MixedRed, moves, 'M');
+            }
+            if (start_result.isEmpty()) {
+                start_result += BitMoves.makeStartMove(BitBoardFigures.MixedBlue, moves, 'm');
+            }
+            startFigure = start_result;
+            //Zielfeld für capture Moves
+        }
+        else {
+            String end_result = "";
+
+            end_result +=BitMoves.makeEndCaptureMove(BitBoardFigures.SingleRed, moves, 'S');
+            if(end_result.isEmpty()){
+                end_result += BitMoves.makeEndCaptureMove(BitBoardFigures.SingleBlue, moves, 's');
+            }
+            if(end_result.isEmpty()){
+                end_result += BitMoves.makeEndCaptureMove(BitBoardFigures.DoubleRed, moves, 'D');
+            }
+            if(end_result.isEmpty()){
+                end_result += BitMoves.makeEndCaptureMove(BitBoardFigures.DoubleBlue, moves, 'd');
+            }
+            if(end_result.isEmpty()) {
+                end_result += BitMoves.makeEndCaptureMove(BitBoardFigures.MixedRed, moves, 'M');
+            }
+            if(end_result.isEmpty()){
+                end_result +=BitMoves.makeEndCaptureMove(BitBoardFigures.MixedBlue, moves, 'm');
+            }
+            endFigure = end_result;
+        }
+        //wenn auf dem Zielfeld kein capture stattgefunden hat
+        if(endFigure.isEmpty()) {
+            makeEndMove(moves);
+            endFigure = "e";
+        }
+
+        return moves + startFigure + endFigure;
+    }
+
+    public static String makeStartMove(long board, String move, char type) {
+        int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
+        String result = "";
+        //if statement is only true, when the current bitboard is occupied at the start position
+        if (((board>>>start)&1)==1) {
+            switch(type){
+                case 'S':
+                    BitBoardFigures.SingleRed&=~(1L<<start);
+                    result += "S";
+                    colorRed= true;
+                    makeMove(move, false);
+                    break;
+                case 'D':
+                    BitBoardFigures.DoubleRed&=~(1L<<start);
+                    BitBoardFigures.SingleRed|=(1L<<start);
+                    result += "D";
+                    colorRed= true;
+                    makeMove(move, false);
+                    break;
+                case 'M':
+                    BitBoardFigures.MixedRed&=~(1L<<start);
+                    BitBoardFigures.SingleBlue|=(1L<<start);
+                    result += "M";
+                    colorRed= true;
+                    makeMove(move, false);
+                    break;
+                case 's':
+                    BitBoardFigures.SingleBlue&=~(1L<<start);
+                    result += "s";
+                    colorRed= false;
+                    makeMove(move, false);
+                    break;
+                case 'd':
+                    BitBoardFigures.DoubleBlue&=~(1L<<start);
+                    BitBoardFigures.SingleBlue|=(1L<<start);
+                    result += "d";
+                    colorRed= false;
+                    makeMove(move, false);
+                    break;
+                case 'm':
+                    BitBoardFigures.MixedBlue&=~(1L<<start);
+                    BitBoardFigures.SingleRed|=(1L<<start);
+                    result += "m";
+                    colorRed= false;
+                    makeMove(move, false);
+                    break;
+            }
+        }
+        return result;
+    }
+
+    public static String makeEndCaptureMove(long board, String move, char type) {
+        int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        String result = "";
+        //if statement is only true, when the current bitboard is occupied at the end position
+        if ((((board>>>end)&1)==1)&&colorRed) {
+            switch(type){
+                case 'S':
+                    BitBoardFigures.SingleRed&=~(1L<<end);
+                    BitBoardFigures.DoubleRed|=(1L<<end);
+                    result += "S";
+                    capture = true;
+                    break;
+                case 's': BitBoardFigures.SingleBlue&=~(1L<<end);
+                    BitBoardFigures.SingleRed|=(1L<<end);
+                    result += "s";
+                    capture = true;
+                    break;
+                case 'd':
+                    BitBoardFigures.DoubleBlue&=~(1L<<end);
+                    result += "d";
+                    BitBoardFigures.MixedRed|=(1L<<end);
+                    capture = true;
+                    break;
+                case 'm':
+                    BitBoardFigures.MixedBlue&=~(1L<<end);
+                    BitBoardFigures.DoubleRed|=(1L<<end);
+                    result += "m";
+                    capture = true;
+                    break;
+            }
+        }else if((((board>>>end)&1)==1)&&!colorRed) {
+//            System.out.println("capture blue");
+            switch(type){
+                case 'S':
+                    BitBoardFigures.SingleRed &=~(1L<<end);
+                    BitBoardFigures.SingleBlue|=(1L<<end);
+                    result += "S";
+                    capture = true;
+                    break;
+                case 'D':
+                    BitBoardFigures.DoubleRed&=~(1L<<end);
+                    BitBoardFigures.MixedBlue|=(1L<<end);
+                    result += "D";
+                    capture = true;
+                    break;
+                case 'M':
+                    BitBoardFigures.MixedRed&=~(1L<<end);
+                    BitBoardFigures.DoubleBlue|=(1L<<end);
+                    result += "M";
+                    capture = true;
+                    break;
+                case 's':
+                    BitBoardFigures.SingleBlue&=~(1L<<end);
+                    BitBoardFigures.DoubleBlue|=(1L<<end);
+                    result += "s";
+                    capture = true;
+                    break;
+            }
+        }
+        return result;
+    }
+
+    //If no other pieces/capture at end position
+    public static void makeEndMove(String move) {
+        int end = (Character.getNumericValue(move.charAt(2)) * 8) + (Character.getNumericValue(move.charAt(3)));
+        if (colorRed){
+            BitBoardFigures.SingleRed|=(1L<<end);
+        }else{
+            BitBoardFigures.SingleBlue|=(1L<<end);
+        }
+    }
+
+    public static void drawBitboard(long bitBoard) {
+        String chessBoard[][]=new String[8][8];
+        for (int i=0;i<64;i++) {
+            chessBoard[i/8][i%8]="";
+        }
+        for (int i=0;i<64;i++) {
+            if (((bitBoard>>>i)&1)==1) {chessBoard[i/8][i%8]="P";}
+            if ("".equals(chessBoard[i/8][i%8])) {chessBoard[i/8][i%8]=" ";}
+        }
+        for (int i=0;i<8;i++) {
+            System.out.println(Arrays.toString(chessBoard[i]));
+        }
+    }
+
+    public static boolean isGameFinished(){
+        // Constants for specific bitboard configurations
+        final long BLUE_WIN_CONDITION = 9079256848778919936L; // Binary number with the first 6 bits as 1
+        final long RED_WIN_CONDITION = 126L; // Specific condition for red
+
+        // Check if blue on red home row
+        if ((BitBoardFigures.SingleBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.MixedBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleBlue & BLUE_WIN_CONDITION) != 0){
+            blueWon= true;
+            return true;
+        }
+        // Check if blue on red home row
+        else if ((BitBoardFigures.SingleRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.MixedRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleRed & RED_WIN_CONDITION) != 0){
+            blueWon =false;
+            return true;
+        }
+
+        //No more red pieces on board
+        else if(BitBoardFigures.SingleRed == 0 && BitBoardFigures.MixedRed == 0 && BitBoardFigures.DoubleRed == 0){
+            blueWon =true;
+            return true;
+        }
+        //No more blue pieces on board
+        else if(BitBoardFigures.SingleBlue == 0 && BitBoardFigures.MixedBlue == 0 && BitBoardFigures.DoubleBlue == 0){
+            blueWon =false;
+            return true;
+        }
+        //No more moves for player who is am zug
+        else if (BitBoardFigures.blueToMove) {
+            String moves = possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            if(moves.isEmpty()){
+                blueWon =false;
+                return true;
+            }
+        }
+        else if(!BitBoardFigures.blueToMove){
+            String moves = possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            if(moves.isEmpty()){
+                blueWon =true;
+                return true;
+            }
+        }
+
+        return false;
+
+    }
+
+    public static String possibleMovesToString(String moves){
+        String readableMoves = "";
+        for (int i = 0; i<moves.length(); i+=4){
+            readableMoves += BitBoard.moveToString(moves.substring(i, i + 4)) + ",";
+        }
+        return readableMoves;
+    }
+
+    /*
+        public static void makeMove(String moves, boolean start){
         //startfeld
         if (start) {
             BitMoves.makeStartMove(BitBoard.SingleRedCopy, moves, 'S');
@@ -416,74 +742,10 @@ public class BitMoves {
             BitBoard.SingleBlueCopy|=(1L<<end);
         }
     }
+*/
+    /*
 
-    public static void drawBitboard(long bitBoard) {
-        String chessBoard[][]=new String[8][8];
-        for (int i=0;i<64;i++) {
-            chessBoard[i/8][i%8]="";
-        }
-        for (int i=0;i<64;i++) {
-            if (((bitBoard>>>i)&1)==1) {chessBoard[i/8][i%8]="P";}
-            if ("".equals(chessBoard[i/8][i%8])) {chessBoard[i/8][i%8]=" ";}
-        }
-        for (int i=0;i<8;i++) {
-            System.out.println(Arrays.toString(chessBoard[i]));
-        }
-    }
-
-    public static boolean isGameFinished(){
-        // Constants for specific bitboard configurations
-        final long BLUE_WIN_CONDITION = 9079256848778919936L; // Binary number with the first 6 bits as 1
-        final long RED_WIN_CONDITION = 126L; // Specific condition for red
-
-        // Check if blue on red home row
-        if ((BitBoardFigures.SingleBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.MixedBlue & BLUE_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleBlue & BLUE_WIN_CONDITION) != 0){
-            blueWon= true;
-            System.out.println("Game won by Blue.");
-            return true;
-        }
-        // Check if blue on red home row
-        else if ((BitBoardFigures.SingleRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.MixedRed & RED_WIN_CONDITION) != 0 || (BitBoardFigures.DoubleRed & RED_WIN_CONDITION) != 0){
-            blueWon =false;
-            System.out.println("Game won by Red1.");
-            return true;
-        }
-
-        //No more red pieces on board
-        else if(BitBoardFigures.SingleRed == 0 && BitBoardFigures.MixedRed == 0 && BitBoardFigures.DoubleRed == 0){
-            blueWon =true;
-            System.out.println("Game won by Blue.");
-            return true;
-        }
-        //No more blue pieces on board
-        else if(BitBoardFigures.SingleBlue == 0 && BitBoardFigures.MixedBlue == 0 && BitBoardFigures.DoubleBlue == 0){
-            blueWon =false;
-            System.out.println("Game won by Red2.");
-            return true;
-        }
-        //No more moves for player who is am zug
-        else if (BitBoardFigures.blueToMove) {
-            String moves = possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-            if(moves.isEmpty()){
-                blueWon =false;
-                System.out.println("Game won by Red3.");
-                return true;
-            }
-        }
-        else if(!BitBoardFigures.blueToMove){
-            String moves = possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
-            if(moves.isEmpty()){
-                blueWon =true;
-                System.out.println("Game won by Blue.");
-                return true;
-            }
-        }
-
-        return false;
-
-    }
-
-    /*long  SingleRedt  = BitMoves.makeMove(BitBoardFigures.SingleRed, moves.substring(i, i + 4), 'S'), SingleBluet = BitMoves.makeMove(BitBoardFigures.SingleBlue, moves.substring(i, i + 4), 'S'),
+    long  SingleRedt  = BitMoves.makeMove(BitBoardFigures.SingleRed, moves.substring(i, i + 4), 'S'), SingleBluet = BitMoves.makeMove(BitBoardFigures.SingleBlue, moves.substring(i, i + 4), 'S'),
             DoubleRedt = BitMoves.makeMove(BitBoardFigures.DoubleRed, moves.substring(i, i + 4), 'B'), DoubleBluet = BitMoves.makeMove(BitBoardFigures.DoubleBlue, moves.substring(i, i + 4), 'R'),
             MixedRedt  = BitMoves.makeMove(BitBoardFigures.MixedRed, moves.substring(i, i + 4), 'Q'), MixedBluet  = BitMoves.makeMove(BitBoardFigures.MixedBlue, moves.substring(i, i + 4), 'K');
 
