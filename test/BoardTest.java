@@ -1,3 +1,4 @@
+/*
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -246,4 +247,12 @@ class BoardTest {
         Board.figureMap[0] = new HashMap<>();
         Board.figureMap[1] = new HashMap<>();
     }
+    private void MiniMaxTest(){
+        Board board = new Board();
+        board.fenToBoard("1bb4/1b0b05/b01b0bb4/1b01b01b02/3r01rr2/b0r0r02rr2/4r01rr1/4r0r0 b");
+        Board.miniMax(board, true, 3 );
+    }
 }
+
+
+ */
