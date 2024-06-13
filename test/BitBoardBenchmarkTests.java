@@ -84,7 +84,7 @@ public class BitBoardBenchmarkTests {
 
         boolean isMax = BitBoardFigures.blueToMove;
 
-        BitValueMoves vm = BitBoard.alphaBeta(isMax, 4);
+        BitValueMoves vm = BitBoard.alphaBeta(isMax, depth);
 
         long stopTime = System.nanoTime();
 

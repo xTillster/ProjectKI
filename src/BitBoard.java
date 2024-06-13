@@ -138,9 +138,17 @@ public class BitBoard {
 
     public static void drawArray(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
         String[][] jumpBoard = new String[8][8];
-        for (int i=0;i<64;i++) {
+        /*for (int i=0;i<64;i++) {
             jumpBoard[i/8][i%8]=" ";
+        }*/
+
+        for(int i=0; i<8; i++){
+            for(int j=0; j<8; j++){
+                jumpBoard[i][j] = "  ";
+            }
         }
+
+
         for (int i=0;i<64;i++) {
             int row = 7 - (i / 8); // Flip rows here
             int col = i % 8;
@@ -153,8 +161,14 @@ public class BitBoard {
             if (((MixedBlue>>i)&1)==1) {jumpBoard[row][col]="rb";}
         }
         for (int i=0;i<8;i++) {
-            System.out.println(Arrays.toString(jumpBoard[i]));
+            String tmp = Arrays.toString(jumpBoard[i]);
+            tmp = tmp.replace(",", " |");
+            tmp = tmp.replace("[", "| ");
+            tmp = tmp.replace("]", " |");
+            System.out.print(8-i + " ");
+            System.out.println(tmp);
         }
+        System.out.println("    a    b    c    d    e    f    g    h");
     }
 
     public static void importFEN(String fenString) {
