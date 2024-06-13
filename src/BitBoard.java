@@ -21,6 +21,7 @@ public class BitBoard {
             System.out.println("Move " + vm.move);
             System.out.println("Move made: " + moveToString(vm.move) + " on expected eval " + vm.v);
             BitMoves.makeMove(move, true);
+            BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
             BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
             System.out.println(BitMoves.isGameFinished());
 
@@ -29,43 +30,6 @@ public class BitBoard {
 
     }
 
-    /*public static void initiateBoard(){
-        long SingleRed = 0L, SingleBlue = 0L, DoubleRed = 0L, DoubleBlue = 0L, MixedRed = 0L, MixedBlue = 0L;
-
-        String[][] jumpBoard ={
-
-                {"00","01","02","03","04","05","06","07"},
-                {"08","09","10","11","12","13","14","15"},
-                {"16","17","18","19","20","21","22","23"},
-                {"24","25","26","27","28","29","30","31"},
-                {"32","33","34","35","36","37","38","39"},
-                {"40","41","42","43","44","45","46","47"},
-                {"48","49","50","51","52","53","54","55"},
-                {"56","57","58","59","60","61","62","63"}};
-
-
-
-                {"0L","1L","2L","03","04","05","06","07"},
-                {"08","09","10","11","12","13","14","15"},
-                {"16","17","18","19","20","21","22","23"},
-                {"24","25","26","27","28","29","30","31"},
-                {"32","33","34","35","36","37","38","39"},
-                {"40","41","42","43","44","45","46","47"},
-                {"48","49","50","51","52","53","54","55"},
-                {"56","57","58","59","60","61","62","63"}};
-
-
-                {"","","","","","","",""},
-                {"","","","","","","",""},
-                {"","","","","","","",""},
-                {"","","",""," "," ",""," "},
-                {"","",""," ","","","",""},
-                {"rr","rr","rr","rr","rr","rr","rr","rr"},
-                {"rr","rr","rr","rr","rr","rr","rr","rr"},
-                {"","","","","","","",""}};
-        arrayToBitboards(jumpBoard,SingleRed,SingleBlue,DoubleRed,DoubleBlue,MixedRed,MixedBlue);
-    }
-    */
 
     static public BitValueMoves alphaBeta(boolean isMax, int depth){
         return alphaBetaRecursion(depth, -100000.0f, +100000.0f, isMax);
@@ -88,16 +52,18 @@ public class BitBoard {
             moves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
 
-            for (int i=0; i<moves.length()-4; i+=4) {
+            for (int i=0; i<moves.length(); i+=4) {
                 String makeMove = BitMoves.makeMove(moves.substring(i, i + 4), true);
+//                System.out.println("Move make: " +makeMove);
+//                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
                 BitValueMoves evaluation = alphaBetaRecursion(depth - 1, alpha, beta, false);
 
-                System.out.println("After move is done:" + moveToString(makeMove));
-                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+//                System.out.println("After move is done:" + moveToString(makeMove));
+//                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
                 BitMoves.unmakeStack.push(makeMove);
                 BitMoves.undoMove();
-                System.out.println("After undoing " + moveToString(makeMove));
-                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+//                System.out.println("After undoing " + makeMove);
+//                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
                 if (evaluation.v > value ||
                         (evaluation.v == value && evaluation.depth > bestDepth)){
@@ -109,15 +75,15 @@ public class BitBoard {
 
                 alpha = Math.max(alpha, value);
 
-                if (value >= beta) {
-                    //System.out.println("break");
-                    break;
-                }
-
-                /*if (alpha >= beta) {
+  /*              if (value >= beta) {
                     //System.out.println("break");
                     break;
                 }*/
+
+                if (alpha >= beta) {
+                    //System.out.println("break");
+                    break;
+                }
             }
             return new BitValueMoves(value, bestMove, bestDepth);
         } else {
@@ -131,17 +97,18 @@ public class BitBoard {
             moves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
 
-            for (int i=0; i<moves.length()-4; i+=4) {
+            for (int i=0; i<moves.length(); i+=4) {
                 String makeMove = BitMoves.makeMove(moves.substring(i, i + 4), true);
-
+//                System.out.println("Move make: " +makeMove);
+//                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
                 BitValueMoves evaluation = alphaBetaRecursion(depth - 1, alpha, beta, true);
-                System.out.println("After move is done: " + moveToString(makeMove));
-                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+//                System.out.println("After move is done: " + moveToString(makeMove));
+//                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
                 BitMoves.unmakeStack.push(makeMove);
                 BitMoves.undoMove();
-                System.out.println("After undoing " + moveToString(makeMove));
-                BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+//                System.out.println("After undoing " + makeMove);
+//               BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
 
 
                 //value = Math.max(value, evaluation.v);
@@ -154,69 +121,18 @@ public class BitBoard {
 
                 beta = Math.min(beta, value);
 
-                if (value <= alpha) {
+               /* if (value <= alpha) {
                     //System.out.println("break");
                     break;
                 }
 
-                /*if (alpha >= beta) {
+                */if (alpha >= beta) {
                     //System.out.println("break");
                     break;
-                }*/
+                }
 
             }
             return new BitValueMoves(value, bestMove, bestDepth);
-        }
-    }
-
-    /*public static void deepCopyBoard(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
-        SingleRedCopy = SingleRed;
-        SingleBlueCopy = SingleBlue;
-        DoubleRedCopy = DoubleRed;
-        DoubleBlueCopy = DoubleBlue;
-        MixedRedCopy = MixedRed;
-        MixedBlueCopy= MixedBlue;
-    }*/
-
-    public static void deepCopyFigures(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
-        BitBoardFigures.SingleRed = SingleRed;
-        BitBoardFigures.SingleBlue = SingleBlue;
-        BitBoardFigures.DoubleRed = DoubleRed;
-        BitBoardFigures.DoubleBlue = DoubleBlue;
-        BitBoardFigures.MixedRed = MixedRed;
-        BitBoardFigures.MixedBlue= MixedBlue;
-    }
-
-    public static void arrayToBitboards(String [][] jumpBoard, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
-        String Binary;
-        for (int i=0;i<64;i++) {
-            Binary="0000000000000000000000000000000000000000000000000000000000000000";
-            Binary=Binary.substring(i+1)+"1"+Binary.substring(0, i);
-            switch (jumpBoard[i/8][i%8]) {
-                case "r0": SingleRed+=convertStringToBitboard(Binary);
-                    break;
-                case "b0": SingleBlue+=convertStringToBitboard(Binary);
-                    break;
-                case "rr": DoubleRed+=convertStringToBitboard(Binary);
-                    break;
-                case "bb": DoubleBlue+=convertStringToBitboard(Binary);
-                    break;
-                case "rb": MixedBlue+=convertStringToBitboard(Binary);
-                    break;
-                case "br": MixedRed+=convertStringToBitboard(Binary);
-                    break;
-            }
-        }
-        drawArray(SingleRed,SingleBlue,DoubleRed,DoubleBlue,MixedRed,MixedBlue);
-        BitBoardFigures.SingleRed=SingleRed; BitBoardFigures.SingleBlue=SingleBlue; BitBoardFigures.DoubleRed=DoubleRed;
-        BitBoardFigures.DoubleBlue=DoubleBlue; BitBoardFigures.MixedRed=MixedRed; BitBoardFigures.MixedBlue=MixedBlue;
-    }
-
-    private static long convertStringToBitboard(String Binary) {
-        if (Binary.charAt(0)=='0') {//not going to be a negative number
-            return Long.parseLong(Binary, 2);
-        } else {
-            return Long.parseLong("1"+Binary.substring(2), 2)*2;
         }
     }
 
@@ -329,5 +245,93 @@ public class BitBoard {
         }else return move;
     }
 
+    /*public static void deepCopyBoard(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        SingleRedCopy = SingleRed;
+        SingleBlueCopy = SingleBlue;
+        DoubleRedCopy = DoubleRed;
+        DoubleBlueCopy = DoubleBlue;
+        MixedRedCopy = MixedRed;
+        MixedBlueCopy= MixedBlue;
+    }
 
+    public static void deepCopyFigures(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        BitBoardFigures.SingleRed = SingleRed;
+        BitBoardFigures.SingleBlue = SingleBlue;
+        BitBoardFigures.DoubleRed = DoubleRed;
+        BitBoardFigures.DoubleBlue = DoubleBlue;
+        BitBoardFigures.MixedRed = MixedRed;
+        BitBoardFigures.MixedBlue= MixedBlue;
+    }
+     */
+    /*public static void initiateBoard(){
+        long SingleRed = 0L, SingleBlue = 0L, DoubleRed = 0L, DoubleBlue = 0L, MixedRed = 0L, MixedBlue = 0L;
+
+        String[][] jumpBoard ={
+
+                {"00","01","02","03","04","05","06","07"},
+                {"08","09","10","11","12","13","14","15"},
+                {"16","17","18","19","20","21","22","23"},
+                {"24","25","26","27","28","29","30","31"},
+                {"32","33","34","35","36","37","38","39"},
+                {"40","41","42","43","44","45","46","47"},
+                {"48","49","50","51","52","53","54","55"},
+                {"56","57","58","59","60","61","62","63"}};
+
+
+
+                {"0L","1L","2L","03","04","05","06","07"},
+                {"08","09","10","11","12","13","14","15"},
+                {"16","17","18","19","20","21","22","23"},
+                {"24","25","26","27","28","29","30","31"},
+                {"32","33","34","35","36","37","38","39"},
+                {"40","41","42","43","44","45","46","47"},
+                {"48","49","50","51","52","53","54","55"},
+                {"56","57","58","59","60","61","62","63"}};
+
+
+                {"","","","","","","",""},
+                {"","","","","","","",""},
+                {"","","","","","","",""},
+                {"","","",""," "," ",""," "},
+                {"","",""," ","","","",""},
+                {"rr","rr","rr","rr","rr","rr","rr","rr"},
+                {"rr","rr","rr","rr","rr","rr","rr","rr"},
+                {"","","","","","","",""}};
+        arrayToBitboards(jumpBoard,SingleRed,SingleBlue,DoubleRed,DoubleBlue,MixedRed,MixedBlue);
+    }
+
+        public static void arrayToBitboards(String [][] jumpBoard, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
+        String Binary;
+        for (int i=0;i<64;i++) {
+            Binary="0000000000000000000000000000000000000000000000000000000000000000";
+            Binary=Binary.substring(i+1)+"1"+Binary.substring(0, i);
+            switch (jumpBoard[i/8][i%8]) {
+                case "r0": SingleRed+=convertStringToBitboard(Binary);
+                    break;
+                case "b0": SingleBlue+=convertStringToBitboard(Binary);
+                    break;
+                case "rr": DoubleRed+=convertStringToBitboard(Binary);
+                    break;
+                case "bb": DoubleBlue+=convertStringToBitboard(Binary);
+                    break;
+                case "rb": MixedBlue+=convertStringToBitboard(Binary);
+                    break;
+                case "br": MixedRed+=convertStringToBitboard(Binary);
+                    break;
+            }
+        }
+        drawArray(SingleRed,SingleBlue,DoubleRed,DoubleBlue,MixedRed,MixedBlue);
+        BitBoardFigures.SingleRed=SingleRed; BitBoardFigures.SingleBlue=SingleBlue; BitBoardFigures.DoubleRed=DoubleRed;
+        BitBoardFigures.DoubleBlue=DoubleBlue; BitBoardFigures.MixedRed=MixedRed; BitBoardFigures.MixedBlue=MixedBlue;
+    }
+
+        private static long convertStringToBitboard(String Binary) {
+        if (Binary.charAt(0)=='0') {//not going to be a negative number
+            return Long.parseLong(Binary, 2);
+        } else {
+            return Long.parseLong("1"+Binary.substring(2), 2)*2;
+        }
+    }
+
+    */
 }

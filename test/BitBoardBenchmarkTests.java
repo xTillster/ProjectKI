@@ -82,18 +82,18 @@ public class BitBoardBenchmarkTests {
 
         long startTime = System.nanoTime();
 
-            boolean isMax = BitBoardFigures.blueToMove;
+        boolean isMax = BitBoardFigures.blueToMove;
 
-            BitValueMoves vm = BitBoard.alphaBeta(isMax, 4);
+        BitValueMoves vm = BitBoard.alphaBeta(isMax, 4);
 
-            long stopTime = System.nanoTime();
+        long stopTime = System.nanoTime();
 
-            float totalTime = (float) (stopTime - startTime) / (1000000);
-            System.out.println("Total time for AlphaBeta for Depth " + depth + " in " + gamePosition + ": " + totalTime + " ms\n" + "Number of visited states in total: " + BitMoves.counter + "\n"
-                    + "Number of visited states pro ms: " + BitMoves.counter / (totalTime) + "\n" + "Best move: " + vm.move + "\n");
+        float totalTime = (float) (stopTime - startTime) / (1000000);
+        System.out.println("Total time for AlphaBeta for Depth " + depth + " in " + gamePosition + ": " + totalTime + " ms\n" + "Number of visited states in total: " + BitMoves.counter + "\n"
+                + "Number of visited states pro ms: " + BitMoves.counter / (totalTime) + "\n" + "Best move: " + vm.move + "\n");
 
-        }
     }
+}
 
 
 

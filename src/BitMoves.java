@@ -33,33 +33,34 @@ public class BitMoves {
 
 
     public static void main(String[] args) {
-        BitBoard.importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r");
+        BitBoard.importFEN("bb5/8/rr7/8/8/8/8/6 b");
         String a = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
         String b = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
         //System.out.println("Single Blue: " + BitBoardFigures.SingleBlue);
         //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
         System.out.println("Moves: " + a + "\nLesbare moves: " + possibleMovesToString(a));
-        String makeMove = makeMove(b.substring(0, 4), true);
+        String makeMove = makeMove(a.substring(0, 4), true);
+        System.out.println("Make Move: " +makeMove);
         unmakeStack.push(makeMove);
         BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
         isGameFinished();
         //System.out.println("Single Blue: " +BitBoardFigures.SingleBlue);
         //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
         System.out.println("Undo Move: ");
-        //undoMove();
+        undoMove();
         BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
         //System.out.println("Single Blue: " +BitBoardFigures.SingleBlue);
         //System.out.println("Single Red: " +BitBoardFigures.SingleRed);
     }
 
     public static float evaluatePosition(int depth, long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue){
-        float value= 0;
         counter++;
+        float value= 0;
         if(isGameFinished()) {
             if (blueWon) {
                 return +1000.0f + depth;
             } else{
-                return -1000.0f + depth;
+                return -1000.0f - depth;
             }
         }
 
@@ -317,55 +318,71 @@ public class BitMoves {
         String move = unmakeStack.pop();
         int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
         int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
-        int start_figure =move.charAt(4);
-        int end_figure =move.charAt(5);
+        char start_figure =move.charAt(4);
+        char end_figure =move.charAt(5);
 
         switch (start_figure){
             case 'S':
                 BitBoardFigures.SingleRed|=(1L<<start);
+                colorRed = true;
                 break;
             case 'D':
                 BitBoardFigures.DoubleRed|=(1L<<start);
                 BitBoardFigures.SingleRed&=~(1L<<start);
+                colorRed= true;
                 break;
             case 'M':
                 BitBoardFigures.MixedRed|=(1L<<start);
                 BitBoardFigures.SingleBlue&=~(1L<<start);
+                colorRed= true;
                 break;
             case 's':
                 BitBoardFigures.SingleBlue|=(1L<<start);
+                colorRed= false;
                 break;
             case 'd':
                 BitBoardFigures.DoubleBlue|=(1L<<start);
                 BitBoardFigures.SingleBlue&=~(1L<<start);
+                colorRed= false;
                 break;
             case 'm':
                 BitBoardFigures.MixedBlue|=(1L<<start);
                 BitBoardFigures.SingleRed&=~(1L<<start);
+                colorRed= false;
                 break;
         }
         switch (end_figure){
             case 'S':
                 BitBoardFigures.SingleRed|=(1L<<end);
+                if(colorRed) {
+                    BitBoardFigures.DoubleRed &= ~(1L << end);
+                }else {
+                    BitBoardFigures.SingleBlue&= ~(1L<<end);
+                }
                 break;
             case 'D':
                 BitBoardFigures.DoubleRed|=(1L<<end);
-                BitBoardFigures.SingleRed&=~(1L<<end);
+                BitBoardFigures.MixedBlue&=~(1L<<end);
                 break;
             case 'M':
                 BitBoardFigures.MixedRed|=(1L<<end);
-                BitBoardFigures.SingleBlue&=~(1L<<end);
+                BitBoardFigures.DoubleBlue&=~(1L<<end);
                 break;
             case 's':
                 BitBoardFigures.SingleBlue|=(1L<<end);
+                if (!colorRed) {
+                    BitBoardFigures.DoubleBlue &= ~(1L << end);
+                }else {
+                    BitBoardFigures.SingleRed&= ~(1L<<end);
+                }
                 break;
             case 'd':
                 BitBoardFigures.DoubleBlue|=(1L<<end);
-                BitBoardFigures.SingleBlue&=~(1L<<end);
+                BitBoardFigures.MixedRed&=~(1L<<end);
                 break;
             case 'm':
                 BitBoardFigures.MixedBlue|=(1L<<end);
-                BitBoardFigures.SingleRed&=~(1L<<end);
+                BitBoardFigures.DoubleRed&=~(1L<<end);
                 break;
             case 'e':
                 if(colorRed){
