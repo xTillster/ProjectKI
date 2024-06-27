@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Stack;
 
 import static java.lang.Long.bitCount;
@@ -30,6 +31,7 @@ public class BitMoves {
     //String format: 0-3 move, 4 source figure, 5 target figure
     static Stack<String> unmakeStack = new Stack<>();
     public static int counter;
+    private static final Map<Character, Integer> test1 = Map.of('0',0,'1',1,'2',2,'3',3,'4',4,'5',5,'6',6,'7',7,'8',8,'9',9);
 
 
     public static void main(String[] args) {
@@ -284,7 +286,7 @@ public class BitMoves {
             }
         }
         //1 right 2 down
-        KNIGHTRED_MOVES = (knightBlue << 17) & EMPTY_KNIGHT_BLUE & ~FILE_A & ~EDGE_63;
+        KNIGHTRED_MOVES = (knightBlue << 17) & EMPTY_KNIGHT_BLUE & ~FILE_H & ~EDGE_63;
         for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
             if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
 //                System.out.println("1 right 2 down " +i);
@@ -314,10 +316,221 @@ public class BitMoves {
         return knightBlueMoves;
     }
 
+
+    //for improved isGameFinished()
+
+    public static boolean hasPossibleMovesBlue(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        BLUE_CAPTURE = SingleRed | DoubleRed | MixedRed;
+        BLUE_NON_CAPTURE = ~(DoubleBlue | MixedBlue);
+        BLUE_ROOK = ~(SingleBlue);
+        EMPTY_BLUE = ~(SingleRed | DoubleRed | MixedRed | DoubleBlue | MixedBlue);
+        EMPTY_KNIGHT_BLUE = ~(DoubleBlue | MixedBlue);
+
+        return hasPossibleMovesNB(DoubleBlue) || hasPossibleMovesSB(SingleBlue) || hasPossibleMovesNB(MixedBlue);
+    }
+
+    public static boolean hasPossibleMovesRed(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {
+        RED_CAPTURE = SingleBlue | DoubleBlue | MixedBlue;
+        RED_NON_CAPTURE = ~(DoubleRed | MixedRed);
+        RED_ROOK = ~(SingleRed);
+        EMPTY_RED = ~(DoubleRed | MixedRed | DoubleBlue | MixedBlue| SingleBlue);
+        EMPTY_KNIGHT_RED = ~(DoubleRed | MixedRed);
+
+        return hasPossibleMovesNR(DoubleRed) || hasPossibleMovesSR(SingleRed) || hasPossibleMovesNR(MixedRed);
+    }
+    // Erklärung: i ist die Position, auf die die Figur kann z.B. 51, dann kann die Figur auf das Feld 51
+    // Felder werden von unten gezählt = erste Reihe beginnt bei 0
+    // es werden immer 4 Zahlen zu dem String hinzugefügt für jeden möglichen Move, die das Feld beschreiben
+    // erste Zahl: Reihe des Startzustandes (bei 0 angefangen, von oben nach unten gezählt)
+    // zweite Zahl: Feld von links Startzustand
+    // dritte Zahl: Abstand nach oben Zielfeldes
+    // vierte Zahl: Abstand links Zielfeld
+    private static boolean hasPossibleMovesSR(long singleRed) {
+        //Capture right
+        long SINGLERED_MOVES = (singleRed >> 7) & RED_CAPTURE & ~FILE_H;
+        for (int i = Long.numberOfTrailingZeros(SINGLERED_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLERED_MOVES); i++) {
+            if (((SINGLERED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Capture right " +(i));
+                return true;
+//                System.out.println(singleRedMoves);
+            }
+        }
+        //Capture left
+        SINGLERED_MOVES = (singleRed >> 9) & RED_CAPTURE & ~FILE_A;
+        for (int i = Long.numberOfTrailingZeros(SINGLERED_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLERED_MOVES); i++) {
+            if (((SINGLERED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Capture left " + (i));
+                return true;
+//                System.out.println(singleRedMoves);
+            }
+        }
+        //Move 1 forward
+        SINGLERED_MOVES =(singleRed >> 8) & EMPTY_RED & ~EDGE_7 &~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(SINGLERED_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLERED_MOVES); i++) {
+            if (((SINGLERED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move forward " +i);
+                return true;
+//                System.out.println(singleRedMoves);
+            }
+        }
+        //Move 1 left
+        SINGLERED_MOVES = (singleRed >>1) & EMPTY_RED & ~FILE_A & ~EDGE_56;
+        for (int i = Long.numberOfTrailingZeros(SINGLERED_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLERED_MOVES); i++) {
+            if (((SINGLERED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move 1 left " +i);
+                return true;
+//                System.out.println(singleRedMoves);
+            }
+        }
+        //Move 1 right
+        SINGLERED_MOVES = (singleRed << 1) & EMPTY_RED & ~FILE_H & ~EDGE_63;
+        for (int i = Long.numberOfTrailingZeros(SINGLERED_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLERED_MOVES); i++) {
+            if (((SINGLERED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move 1 right " +i);
+                return true;
+//                System.out.println(singleRedMoves);
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasPossibleMovesNR(long knightRed) {
+        //1 right 2 up
+        long KNIGHTRED_MOVES = (knightRed >> 15) & EMPTY_KNIGHT_RED & ~FILE_H & ~EDGE_7 &~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("1 right 2 up " + i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //1 left 2 up
+        KNIGHTRED_MOVES = (knightRed >> 17) & EMPTY_KNIGHT_RED & ~FILE_A & ~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("1 left 2 up " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //2 left 1 up
+        KNIGHTRED_MOVES = (knightRed >> 10)& EMPTY_KNIGHT_RED & ~FILE_GH & ~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("2 left 1 up " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //2 right 1 up
+        KNIGHTRED_MOVES = (knightRed >> 6) & EMPTY_RED & ~FILE_AB &~EDGE_7;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move 2 right 1 up " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean hasPossibleMovesSB(long singleRed) {
+        //Capture left
+        long SINGLEBLUE_MOVES = (singleRed << 7) & BLUE_CAPTURE & ~FILE_A;
+        for (int i = Long.numberOfTrailingZeros(SINGLEBLUE_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLEBLUE_MOVES); i++) {
+            if (((SINGLEBLUE_MOVES >> i) & 1) == 1) {
+//                System.out.println("Capture left: " + i);
+                return true;
+//                System.out.println(singleBlueMoves);
+            }
+        }
+        //Capture right
+        SINGLEBLUE_MOVES = (singleRed << 9) & BLUE_CAPTURE & ~FILE_H;
+        for (int i = Long.numberOfTrailingZeros(SINGLEBLUE_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLEBLUE_MOVES); i++) {
+            if (((SINGLEBLUE_MOVES >> i) & 1) == 1) {
+//                System.out.println("Capture right: " + i);
+                return true;
+//                System.out.println(singleBlueMoves);
+            }
+        }
+        //Move 1 forward
+        SINGLEBLUE_MOVES = (singleRed << 8) & EMPTY_BLUE & ~EDGE_63&~EDGE_56;
+        for (int i = Long.numberOfTrailingZeros(SINGLEBLUE_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLEBLUE_MOVES); i++) {
+            if (((SINGLEBLUE_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move forward: " + i);
+                return true;
+            }
+        }
+        //Move 1 right
+        SINGLEBLUE_MOVES = (singleRed << 1) & EMPTY_BLUE & ~FILE_H &~EDGE_7;
+        for (int i = Long.numberOfTrailingZeros(SINGLEBLUE_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLEBLUE_MOVES); i++) {
+            if (((SINGLEBLUE_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move 1 right: " + i);
+                return true;
+            }
+        }
+        //Move 1 left
+        SINGLEBLUE_MOVES = (singleRed >> 1) & EMPTY_BLUE & ~FILE_A & ~EDGE_0;
+        for (int i = Long.numberOfTrailingZeros(SINGLEBLUE_MOVES); i < 64 - Long.numberOfLeadingZeros(SINGLEBLUE_MOVES); i++) {
+            if (((SINGLEBLUE_MOVES >> i) & 1) == 1) {
+//                System.out.println("Move 1 left: " + i);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasPossibleMovesNB(long knightBlue) {
+        //1 left 2 down
+        long KNIGHTRED_MOVES = (knightBlue << 15) & EMPTY_KNIGHT_BLUE & ~FILE_A & ~EDGE_56;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("1 left 2 down " + i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //1 right 2 down
+        KNIGHTRED_MOVES = (knightBlue << 17) & EMPTY_KNIGHT_BLUE & ~FILE_H & ~EDGE_63;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("1 right 2 down " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //2 left 1 down
+        KNIGHTRED_MOVES = (knightBlue << 6)& EMPTY_KNIGHT_BLUE & ~FILE_GH& ~EDGE_56;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("2 left 1 down " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+        //2 right 1 down
+        KNIGHTRED_MOVES = (knightBlue << 10) & EMPTY_BLUE & ~FILE_AB & ~EDGE_63;
+        for (int i = Long.numberOfTrailingZeros(KNIGHTRED_MOVES); i < 64 - Long.numberOfLeadingZeros(KNIGHTRED_MOVES); i++) {
+            if (((KNIGHTRED_MOVES >> i) & 1) == 1) {
+//                System.out.println("2 right 1 down " +i);
+                return true;
+//                System.out.println(knightRedMoves);
+            }
+        }
+
+        return false;
+    }
+
+
+
+
     public static void undoMove(){
         String move = unmakeStack.pop();
-        int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
-        int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        //int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
+        //int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        int start=(getNumericalCharValue(move.charAt(0))*8)+(getNumericalCharValue(move.charAt(1)));
+        int end=(getNumericalCharValue(move.charAt(2))*8)+(getNumericalCharValue(move.charAt(3)));
         char start_figure =move.charAt(4);
         char end_figure =move.charAt(5);
 
@@ -452,7 +665,8 @@ public class BitMoves {
     }
 
     public static String makeStartMove(long board, String move, char type) {
-        int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
+        //int start=(Character.getNumericValue(move.charAt(0))*8)+(Character.getNumericValue(move.charAt(1)));
+        int start=(getNumericalCharValue(move.charAt(0))*8)+(getNumericalCharValue(move.charAt(1)));
         String result = "";
         //if statement is only true, when the current bitboard is occupied at the start position
         if (((board>>>start)&1)==1) {
@@ -502,8 +716,16 @@ public class BitMoves {
         return result;
     }
 
+    //essentially Character.getNumericValue() but only for chars ranging from '0' to '9'
+    private static int getNumericalCharValue(char ch){
+        return (int) ch + ((402667017 & 0x3E0) >> 5) & 0x1F;
+    }
+
+
+
     public static String makeEndCaptureMove(long board, String move, char type) {
-        int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        //int end=(Character.getNumericValue(move.charAt(2))*8)+(Character.getNumericValue(move.charAt(3)));
+        int end=(getNumericalCharValue(move.charAt(2))*8)+(getNumericalCharValue(move.charAt(3)));
         String result = "";
         //if statement is only true, when the current bitboard is occupied at the end position
         if ((((board>>>end)&1)==1)&&colorRed) {
@@ -566,7 +788,8 @@ public class BitMoves {
 
     //If no other pieces/capture at end position
     public static void makeEndMove(String move) {
-        int end = (Character.getNumericValue(move.charAt(2)) * 8) + (Character.getNumericValue(move.charAt(3)));
+        //int end = (Character.getNumericValue(move.charAt(2)) * 8) + (Character.getNumericValue(move.charAt(3)));
+        int end = (getNumericalCharValue(move.charAt(2)) * 8) + (getNumericalCharValue(move.charAt(3)));
         if (colorRed){
             BitBoardFigures.SingleRed|=(1L<<end);
         }else{
@@ -616,16 +839,32 @@ public class BitMoves {
         }
         //No more moves for player who is am zug
         else if (BitBoardFigures.blueToMove) {
-            String moves = possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            //OLD
+            /*String moves = possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
             if(moves.isEmpty()){
+                System.out.println("no moves left");
                 blueWon =false;
+                return true;
+            }*/
+            //NEW
+            boolean hasMovesLeft = hasPossibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            if (!hasMovesLeft){
+                blueWon = false;
                 return true;
             }
         }
         else if(!BitBoardFigures.blueToMove){
-            String moves = possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            //OLD
+            /*String moves = possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
             if(moves.isEmpty()){
-                blueWon =true;
+                System.out.println("no moves left");
+                blueWon = true;
+                return true;
+            }*/
+            //NEW
+            boolean hasMovesLeft = hasPossibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            if (!hasMovesLeft){
+                blueWon = true;
                 return true;
             }
         }
