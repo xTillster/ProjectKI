@@ -17,6 +17,8 @@ public class Client {
         Gson gson = new Gson();
         Scanner scanner = new Scanner(System.in);
 
+        BitMoves.initZobristTable();
+
         while (true) {
             try {
                 // send "get" as a JSON to the server over the network
@@ -43,7 +45,7 @@ public class Client {
                         // String input = myAI.getMove();
 
                         BitBoard.importFEN(game.board);
-                        String input = BitBoard.alphaBeta(BitBoardFigures.blueToMove, 4).moveToString();
+                        String input = BitBoard.alphaBetaWithTransposition(BitBoardFigures.blueToMove, 4).moveToString();
                         //BitMoves.makeMove(input, true);
 
                         // transforms the input move to JSON
@@ -56,7 +58,7 @@ public class Client {
                         System.out.println("New Board: " + game.board);
 
                         BitBoard.importFEN(game.board);
-                        String input = BitBoard.alphaBeta(BitBoardFigures.blueToMove, 4).moveToString();
+                        String input = BitBoard.alphaBetaWithTransposition(BitBoardFigures.blueToMove, 4).moveToString();
                         //BitMoves.makeMove(input, true);
 
                         String data = gson.toJson(input);

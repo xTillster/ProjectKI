@@ -29,6 +29,8 @@ public class BitMoves {
     static String endFigure = "";
     //String format: 0-3 move, 4 source figure, 5 target figure
     static Stack<String> unmakeStack = new Stack<>();
+    static boolean mctsBlueStarted;
+    static boolean mctsBlueToMove;
     public static int counter;
     public static int moveCounter;
     public static long aiRunningTime = 0L;

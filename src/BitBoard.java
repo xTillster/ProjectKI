@@ -1,12 +1,15 @@
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static java.lang.Character.isDigit;
 
 public class BitBoard {
-
+    static long counter = 0;
     public static void main(String[] args) {
-        importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 b");
-        System.out.println("Initial evaluation: " + BitMoves.evaluatePosition(0, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
+        //importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r");
+        /*System.out.println("Initial evaluation: " + BitMoves.evaluatePosition(0, BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue));
         boolean isMax;
         while (!BitMoves.isGameFinished()) {
             if (BitBoardFigures.blueToMove){
@@ -23,8 +26,38 @@ public class BitBoard {
             BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
             System.out.println(BitMoves.isGameFinished());
 
-        }
+        }*/
 
+        for (int i = 0; i < 10; i++) {
+            importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 r");
+            boolean isMax;
+            BitMoves.initZobristTable();
+
+            while (!BitMoves.isGameFinished()) {
+                isMax = BitBoardFigures.blueToMove;
+
+                String move;
+                if (isMax) {
+                    //alpha beta plays blue
+                    move = alphaBetaWithTransposition(isMax, 4).move;
+                    System.out.println("alphaBeta is making the move: " + move);
+                } else {
+                    //mcts plays red
+                    //timelimit in ms
+                    move = mctsUCT(500);
+                    System.out.println("mcts is making the move: " + move);
+                }
+                BitMoves.makeMove(move, true);
+                //BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+                BitBoardFigures.blueToMove = !BitBoardFigures.blueToMove;
+            }
+            if(!BitBoardFigures.blueToMove) {
+                System.out.println("Alpha Beta AI has won!");
+            } else {
+                System.out.println("MCTS AI has won!");
+            }
+            BitBoard.drawArray(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        }
 
     }
 
@@ -65,6 +98,7 @@ public class BitBoard {
     }
 
     static public BitValueMoves alphaBetaWithTransposition(boolean isMax, int depth){
+        BitMoves.transpositionTable = new HashMap<>();
         BitMoves.moveCounter += 1;
         int timeDepth = 4;
         long startTime = System.currentTimeMillis();
@@ -85,7 +119,7 @@ public class BitBoard {
             if (BitMoves.aiRunningTime > 100000){
                 timeDepth = 9; //~3.5s or better in endgame
             } else {
-                timeDepth = 10; //~13s or better in endgame
+                timeDepth = 12; //~13s or better in endgame
             }
         } else {
             timeDepth = 8; //~3.3s on full board
@@ -209,8 +243,11 @@ public class BitBoard {
         }
 
         long hashedBoard = BitMoves.hashBoard();
-        if(BitMoves.elementOfTranspositionTable(hashedBoard) != null){
-            return BitMoves.elementOfTranspositionTable(hashedBoard).bitValueMove;
+        //if(BitMoves.elementOfTranspositionTable(hashedBoard) != null){
+        //    return BitMoves.elementOfTranspositionTable(hashedBoard).bitValueMove;
+        //}
+        if(BitMoves.transpositionTable.containsKey(hashedBoard)){
+            return BitMoves.transpositionTable.get(hashedBoard).bitValueMove;
         }
 
         if (isMax){
@@ -290,6 +327,192 @@ public class BitBoard {
             return bitValueMoves;
 
         }
+    }
+
+    //computationalBudget in ms
+    static public String mctsUCT(long computationalBudget){
+        String possibleMoves;
+        BitMoves.mctsBlueToMove = BitBoardFigures.blueToMove;
+
+        BitBoardFigures.mctsSingleRed = BitBoardFigures.SingleRed;
+        BitBoardFigures.mctsDoubleRed = BitBoardFigures.DoubleRed;
+        BitBoardFigures.mctsMixedRed = BitBoardFigures.MixedRed;
+        BitBoardFigures.mctsSingleBlue = BitBoardFigures.SingleBlue;
+        BitBoardFigures.mctsDoubleBlue = BitBoardFigures.DoubleBlue;
+        BitBoardFigures.mctsMixedBlue = BitBoardFigures.MixedBlue;
+
+        if(BitMoves.mctsBlueToMove){
+            possibleMoves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        } else {
+            possibleMoves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        }
+
+        MCTSNode root = new MCTSNode("", possibleMoves, null);
+
+        long endtime = System.currentTimeMillis() + computationalBudget;
+
+        MCTSNode v_i;
+        int playoutReward;
+
+        while(System.currentTimeMillis() < endtime){
+            BitMoves.mctsBlueToMove = BitBoardFigures.blueToMove;
+
+            v_i = mctsTreePolicy(root);
+            playoutReward = mctsDefaultPolicy();
+            mctsBackup(v_i, playoutReward);
+        }
+
+        //get best move
+        /*String bestMove;
+        try {
+            bestMove = root.children.entrySet().stream().reduce((entry1, entry2) -> entry1.getValue().getWinRate() > entry2.getValue().getWinRate() ? entry1 : entry2).get().getKey();
+        } catch (NoSuchElementException e){
+            return "";
+        }
+
+        return bestMove;*/
+
+        return mctsBestChild(root, 0).sourceMove;
+    }
+
+    private static MCTSNode mctsTreePolicy(MCTSNode root){
+        MCTSNode nodePointer = root;
+
+        //while(!nodePointer.isTerminal){
+        while(!BitMoves.isGameFinished()){
+            if(!nodePointer.isExpanded){
+                return mctsExpand(nodePointer);
+            } else {
+                nodePointer = mctsBestChild(nodePointer, Math.sqrt(2));
+                String move = BitMoves.makeMove(nodePointer.sourceMove, true);
+                //BitMoves.unmakeStack.push(move);
+                BitMoves.mctsBlueToMove = !BitMoves.mctsBlueToMove;
+            }
+        }
+
+        return nodePointer;
+    }
+
+    private static MCTSNode mctsExpand(MCTSNode root){
+        String randomUntriedMove = root.getRandomPlayoutMove();
+
+        randomUntriedMove = BitMoves.makeMove(randomUntriedMove, true);
+        //BitMoves.unmakeStack.push(randomUntriedMove);
+        BitMoves.mctsBlueToMove = !BitMoves.mctsBlueToMove;
+
+        String possibleMoves;
+        if(BitMoves.mctsBlueToMove){
+            possibleMoves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        } else {
+            possibleMoves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+        }
+
+        MCTSNode newChild = new MCTSNode(randomUntriedMove, possibleMoves, root);
+
+        root.addChild(randomUntriedMove, newChild);
+        return newChild;
+    }
+
+    private static MCTSNode mctsBestChild(MCTSNode node, double uct_c){
+        try {
+            return node.children.entrySet().stream().reduce((entry1, entry2) -> uctValue(entry1.getValue(), uct_c) > uctValue(entry2.getValue(), uct_c) ? entry1 : entry2).get().getValue();
+        } catch (NoSuchElementException e){
+            return null;
+        }
+    }
+
+    private static double uctValue(MCTSNode node, double uct_c){
+        return node.playoutsWon / node.playoutsSum + uct_c * Math.sqrt((Math.log(node.parent.playoutsSum / node.playoutsSum)));
+    }
+
+    private static int mctsDefaultPolicy(){
+        String moves;
+        while(!BitMoves.isGameFinished()){
+            if (BitMoves.mctsBlueToMove){
+                moves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            } else {
+                moves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+            }
+
+            //select move uniformly at random
+            //sometimes BitMoves.mctsBlueToMove is wrong, the try-catch fixes this bug
+            int offset;
+            try {
+                offset = ThreadLocalRandom.current().nextInt(0, moves.length()/4);
+            } catch (IllegalArgumentException ignored){
+                BitMoves.mctsBlueToMove = !BitMoves.mctsBlueToMove;
+                if (BitMoves.mctsBlueToMove){
+                    moves = BitMoves.possibleMovesBlue(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+                } else {
+                    moves = BitMoves.possibleMovesRed(BitBoardFigures.SingleRed, BitBoardFigures.SingleBlue, BitBoardFigures.DoubleRed, BitBoardFigures.DoubleBlue, BitBoardFigures.MixedRed, BitBoardFigures.MixedBlue);
+                }
+                offset = ThreadLocalRandom.current().nextInt(0, moves.length()/4);
+            }
+
+            String randomMove = moves.substring(offset*4, offset*4+4);
+
+            randomMove = BitMoves.makeMove(randomMove, true);
+            //BitMoves.unmakeStack.push(randomMove);
+            BitMoves.mctsBlueToMove = !BitMoves.mctsBlueToMove;
+        }
+
+        counter += 1;
+        if(counter == Long.MAX_VALUE - 1) System.out.println("overflowing");
+
+        if(BitMoves.mctsBlueStarted){
+            if(BitMoves.blueWon){
+                return 1;
+            } else {
+                //return -1;
+                return 0;
+            }
+        } else {
+            if(BitMoves.blueWon){
+                //return -1;
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+    }
+
+    private static void mctsBackup(MCTSNode leaf, int reward){
+        leaf.playoutsSum = 1;
+        leaf.playoutsWon = reward;
+        MCTSNode parent = leaf.parent;
+        while(parent != null){
+            parent.playoutsSum++;
+            parent.playoutsWon += reward;
+            parent = parent.parent;
+        }
+
+        BitBoardFigures.SingleRed = BitBoardFigures.mctsSingleRed;
+        BitBoardFigures.SingleBlue = BitBoardFigures.mctsSingleBlue;
+        BitBoardFigures.MixedRed = BitBoardFigures.mctsMixedRed;
+        BitBoardFigures.MixedBlue = BitBoardFigures.mctsMixedBlue;
+        BitBoardFigures.DoubleRed = BitBoardFigures.mctsDoubleRed;
+        BitBoardFigures.DoubleBlue = BitBoardFigures.mctsDoubleBlue;
+
+        /*while(!BitMoves.unmakeStack.isEmpty()){
+            try {
+                BitMoves.undoMove();
+            } catch (StringIndexOutOfBoundsException e){
+                //System.out.println(BitMoves.unmakeStack);
+                break;
+            }
+
+            //drawArray(BitBoardFigures.SingleRed,BitBoardFigures.SingleBlue,BitBoardFigures.DoubleRed,BitBoardFigures.DoubleBlue,BitBoardFigures.MixedRed,BitBoardFigures.MixedBlue);
+
+        }*/
+        //importFEN("b0b0b0b0b0b0/1b0b0b0b0b0b01/8/8/8/8/1r0r0r0r0r0r01/r0r0r0r0r0r0 b");
+
+
+
+        /*try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }*/
     }
 
     public static void drawArray(long SingleRed, long SingleBlue, long DoubleRed, long DoubleBlue, long MixedRed, long MixedBlue) {

@@ -3,4 +3,6 @@ class GameData {
     boolean player1;
     boolean player2;
     boolean bothConnected;
+    boolean end;
+    long time;
 }
